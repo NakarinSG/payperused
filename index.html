@@ -10,22 +10,12 @@
 <link rel="manifest" href="manifest.json">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #0f172a;
-    --surface: #1e293b;
-    --surface2: #334155;
-    --border: #475569;
-    --accent: #6366f1;
-    --accent2: #818cf8;
-    --green: #22c55e;
-    --red: #f87171;
-    --text: #f1f5f9;
-    --muted: #94a3b8;
-    --radius: 12px;
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --border: #475569;
+    --accent: #6366f1; --accent2: #818cf8; --green: #22c55e; --red: #f87171;
+    --text: #f1f5f9; --muted: #94a3b8; --radius: 12px;
     --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
-
   html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; }
   body { display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; }
 
@@ -36,7 +26,7 @@
     display: flex; align-items: center; justify-content: space-between;
   }
   header h1 { font-size: 20px; font-weight: 700; color: var(--accent2); }
-  .sync-badge { display: flex; align-items: center; gap: 6px; cursor: default; }
+  .sync-badge { display: flex; align-items: center; gap: 6px; }
   .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
   .sync-label { font-size: 12px; color: var(--muted); font-family: monospace; }
 
@@ -49,8 +39,7 @@
   .tab.active { color: var(--accent2); border-bottom-color: var(--accent); }
 
   main { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: calc(16px + var(--safe-bottom)); }
-  .page { display: none; }
-  .page.active { display: block; }
+  .page { display: none; } .page.active { display: block; }
 
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
   .card-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
@@ -79,12 +68,15 @@
 
   .member-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
   .chip {
-    display: flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; gap: 4px;
     background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 20px; padding: 5px 10px 5px 12px; font-size: 14px;
+    border-radius: 20px; padding: 5px 8px 5px 12px; font-size: 14px;
   }
-  .chip button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 2px; }
-  .chip button:hover { color: var(--red); }
+  .chip.chip-me { border-color: var(--accent); background: rgba(99,102,241,.12); }
+  .chip-qr-btn { background: none; border: none; cursor: pointer; font-size: 15px; padding: 0 2px; line-height: 1; opacity: .5; transition: opacity .15s; }
+  .chip-qr-btn.has-qr { opacity: 1; }
+  .chip-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 2px; }
+  .chip-del:hover { color: var(--red); }
 
   .add-row { display: flex; gap: 8px; }
   .add-row input { flex: 1; }
@@ -103,10 +95,9 @@
     display: flex; align-items: center; gap: 6px;
     background: var(--surface2); border: 1px solid var(--border);
     border-radius: 8px; padding: 6px 10px; cursor: pointer;
-    -webkit-tap-highlight-color: transparent; transition: border-color .15s;
+    -webkit-tap-highlight-color: transparent; transition: border-color .15s, background .15s;
   }
   .check-item.selected { border-color: var(--accent); background: rgba(99,102,241,.15); }
-  .check-item input[type=checkbox] { display: none; }
   .check-item span { font-size: 14px; }
 
   .weight-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
@@ -122,17 +113,24 @@
 
   .result-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .result-table th { color: var(--muted); font-weight: 600; text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
-  .result-table td { padding: 8px 8px; border-bottom: 1px solid rgba(71,85,105,.4); vertical-align: top; }
+  .result-table td { padding: 8px; border-bottom: 1px solid rgba(71,85,105,.4); vertical-align: top; }
   .result-table tr:last-child td { border-bottom: none; }
   .text-right { text-align: right !important; }
 
   .transfer-item {
     background: var(--surface2); border-radius: 10px; padding: 12px 14px;
-    margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
   }
-  .transfer-names { font-size: 15px; }
+  .transfer-names { font-size: 15px; flex: 1; min-width: 0; }
   .transfer-names .arrow { color: var(--muted); margin: 0 6px; }
+  .transfer-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .transfer-amount { font-size: 17px; font-weight: 700; color: var(--accent2); }
+  .qr-scan-btn {
+    background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.3);
+    color: var(--green); border-radius: 8px; padding: 6px 10px; font-size: 13px; font-weight: 600;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    display: flex; align-items: center; gap: 4px;
+  }
 
   .empty { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 14px; line-height: 1.8; }
   .empty .icon { font-size: 40px; display: block; margin-bottom: 8px; }
@@ -162,7 +160,7 @@
   select option { background: var(--surface2); }
 
   .form-modal-backdrop {
-    position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 50;
+    position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 50;
     display: flex; align-items: flex-end; justify-content: center;
     opacity: 0; pointer-events: none; transition: opacity .25s;
   }
@@ -175,19 +173,44 @@
   }
   .form-modal-backdrop.open .form-modal { transform: translateY(0); }
   .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 4px; margin: 0 auto 16px; }
-  .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+  .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
 
   .session-id-box {
     background: var(--surface2); border-radius: 8px; padding: 10px 12px;
     font-family: monospace; font-size: 18px; letter-spacing: .15em;
     text-align: center; color: var(--accent2); font-weight: 700; margin-bottom: 10px;
   }
-  .loading-spinner {
-    display: inline-block; width: 16px; height: 16px;
-    border: 2px solid var(--border); border-top-color: var(--accent2);
-    border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle;
+  .identity-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.3);
+    border-radius: 8px; padding: 8px 12px; margin-bottom: 10px;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .identity-row .me-label { font-size: 12px; color: var(--muted); }
+  .identity-row .me-name { font-weight: 700; color: var(--accent2); font-size: 15px; }
+
+  /* QR modal specific */
+  .qr-img-wrap {
+    background: #fff; border-radius: 12px; padding: 16px;
+    display: flex; justify-content: center; margin-bottom: 16px;
+  }
+  .qr-img-wrap img { max-width: 260px; width: 100%; display: block; border-radius: 4px; }
+  .qr-empty {
+    background: var(--surface2); border-radius: 12px; padding: 40px 20px;
+    text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 16px;
+  }
+
+  /* Identity choice grid */
+  .identity-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+  .identity-choice {
+    background: var(--surface2); border: 2px solid var(--border); border-radius: 12px;
+    padding: 14px 10px; text-align: center; cursor: pointer;
+    transition: border-color .15s, background .15s; -webkit-tap-highlight-color: transparent;
+  }
+  .identity-choice:hover { border-color: var(--accent2); }
+  .identity-choice .ic-name { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+  .identity-choice .ic-qr { font-size: 11px; color: var(--green); }
+  .identity-choice .ic-noqr { font-size: 11px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -207,7 +230,6 @@
 </nav>
 
 <main>
-  <!-- Members Page -->
   <div class="page active" id="page-members">
     <div class="card">
       <div class="card-title">รายชื่อสมาชิก</div>
@@ -217,10 +239,7 @@
         <button class="btn btn-primary btn-sm" onclick="addMember()" style="width:auto;white-space:nowrap">+ เพิ่ม</button>
       </div>
     </div>
-
-    <!-- Session card (rendered by JS) -->
     <div class="card" id="session-card"></div>
-
     <div class="card">
       <div class="card-title">อื่นๆ</div>
       <button class="btn btn-ghost btn-sm" onclick="newSession()" style="width:100%;margin-bottom:8px">🔄 ล้างข้อมูลทั้งหมด</button>
@@ -228,36 +247,29 @@
     </div>
   </div>
 
-  <!-- Expenses Page -->
   <div class="page" id="page-expenses">
     <button class="btn btn-primary" onclick="openExpenseModal()" style="margin-bottom:16px">+ เพิ่มรายการค่าใช้จ่าย</button>
     <div id="expense-list"></div>
   </div>
 
-  <!-- Results Page -->
   <div class="page" id="page-results">
     <div id="results-content"></div>
   </div>
 </main>
 
-<!-- Add Expense Modal -->
+<!-- Expense Modal -->
 <div class="form-modal-backdrop" id="expense-modal">
   <div class="form-modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="modal-title">เพิ่มรายการค่าใช้จ่าย</div>
-
     <label>ชื่อรายการ</label>
     <input type="text" id="exp-name" placeholder="เช่น อาหารเย็น, น้ำมัน" autocomplete="off">
-
     <label>ราคารวม (บาท)</label>
     <input type="number" id="exp-amount" placeholder="0" min="0" inputmode="decimal">
-
     <label>ใครออกเงินก่อน</label>
     <select id="exp-payer"></select>
-
     <label>ใครร่วมหารบ้าง</label>
     <div class="check-grid" id="exp-participants"></div>
-
     <div class="toggle-row">
       <span class="toggle-label">หารไม่เท่ากัน (ตั้งน้ำหนัก)</span>
       <label class="toggle">
@@ -265,12 +277,10 @@
         <span class="slider"></span>
       </label>
     </div>
-
     <div id="weight-section" style="display:none">
       <label style="margin-top:10px">น้ำหนักการหาร</label>
       <div class="weight-grid" id="exp-weights"></div>
     </div>
-
     <div style="display:flex;gap:8px;margin-top:16px">
       <button class="btn btn-ghost" onclick="closeExpenseModal()" style="flex:1">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveExpense()" style="flex:2">บันทึก</button>
@@ -278,13 +288,34 @@
   </div>
 </div>
 
+<!-- Identity Modal -->
+<div class="form-modal-backdrop" id="identity-modal">
+  <div class="form-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👋 สวัสดี! คุณคือใคร?</div>
+    <div class="modal-sub">เลือกชื่อของคุณในกลุ่มนี้ เพื่อแนบ QR PromptPay ของคุณ</div>
+    <div class="identity-grid" id="identity-choices"></div>
+    <button class="btn btn-ghost" onclick="closeIdentityModal()" style="width:100%">ข้ามไปก่อน</button>
+  </div>
+</div>
+
+<!-- QR Modal -->
+<div class="form-modal-backdrop" id="qr-modal">
+  <div class="form-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="qr-modal-name"></div>
+    <div class="modal-sub" id="qr-modal-sub"></div>
+    <div id="qr-modal-img"></div>
+    <input type="file" id="qr-file-input" accept="image/*" style="display:none" onchange="handleQRUpload(event)">
+    <div id="qr-modal-actions"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script>
-// ─── Firebase ─────────────────────────────────────────────────────────────────
 firebase.initializeApp({
   apiKey: "AIzaSyAhkK7cl2-ek9LrQGhisyvKacQ21Qru6Xs",
   authDomain: "payperused.firebaseapp.com",
@@ -296,15 +327,14 @@ firebase.initializeApp({
 });
 const db = firebase.database();
 
-// ─── App State ────────────────────────────────────────────────────────────────
-let state = { members: [], expenses: [] };
+// ─── State ────────────────────────────────────────────────────────────────────
+let state = { members: [], expenses: [], qrcodes: {} };
 let editingExpenseId = null;
 
-// ─── Session State ────────────────────────────────────────────────────────────
-let sessionId = null;
-let isSharedSession = false;
-let isSyncingFromRemote = false;
-let sessionRef = null;
+// ─── Session ──────────────────────────────────────────────────────────────────
+let sessionId = null, isSharedSession = false;
+let isSyncingFromRemote = false, sessionRef = null;
+let identityModalShown = false;
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 function toast(msg) {
@@ -325,17 +355,17 @@ document.querySelectorAll('.tab').forEach(t => {
   });
 });
 
-// ─── Local Storage ────────────────────────────────────────────────────────────
+// ─── Storage ──────────────────────────────────────────────────────────────────
 function loadLocalState() {
   const s = localStorage.getItem('payperused');
-  state = s ? JSON.parse(s) : { members: [], expenses: [] };
+  state = s ? JSON.parse(s) : { members: [], expenses: [], qrcodes: {} };
+  if (!state.qrcodes) state.qrcodes = {};
 }
 
 function persistLocal() {
   localStorage.setItem('payperused', JSON.stringify(state));
 }
 
-// ─── Save (local or Firebase) ─────────────────────────────────────────────────
 function saveState() {
   if (isSharedSession && !isSyncingFromRemote) {
     sessionRef.set(state);
@@ -344,15 +374,151 @@ function saveState() {
   }
 }
 
-// ─── Firebase Session ─────────────────────────────────────────────────────────
-function genId() {
-  return Math.random().toString(36).slice(2, 8);
+function normalizeState(data) {
+  const toArr = v => !v ? [] : Array.isArray(v) ? v : Object.values(v);
+  return {
+    members: toArr(data.members),
+    expenses: toArr(data.expenses),
+    qrcodes: data.qrcodes || {}
+  };
 }
 
-function normalizeState(data) {
-  const toArr = v => Array.isArray(v) ? v : Object.values(v || {});
-  return { members: toArr(data.members), expenses: toArr(data.expenses) };
+// ─── Identity ────────────────────────────────────────────────────────────────
+function getIdentity() {
+  return sessionId ? localStorage.getItem('ppu_me_' + sessionId) : null;
 }
+function setIdentity(name) {
+  if (sessionId) localStorage.setItem('ppu_me_' + sessionId, name);
+}
+function clearIdentity() {
+  if (sessionId) localStorage.removeItem('ppu_me_' + sessionId);
+}
+
+function showIdentityModal() {
+  if (!state.members.length) return;
+  const el = document.getElementById('identity-choices');
+  el.innerHTML = state.members.map(m => {
+    const hasQR = !!(state.qrcodes && state.qrcodes[m]);
+    return `<div class="identity-choice" onclick="selectIdentity('${escAttr(m)}')">
+      <div class="ic-name">${escHtml(m)}</div>
+      <div class="${hasQR ? 'ic-qr' : 'ic-noqr'}">${hasQR ? '📱 มี QR แล้ว' : 'ยังไม่มี QR'}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('identity-modal').classList.add('open');
+}
+
+function selectIdentity(name) {
+  setIdentity(name);
+  closeIdentityModal();
+  renderSessionCard();
+  renderMembers();
+  toast(`สวัสดี ${name}! 👋`);
+  const hasQR = state.qrcodes && state.qrcodes[name];
+  if (!hasQR) setTimeout(() => openQRModal(name), 350);
+}
+
+function closeIdentityModal() {
+  document.getElementById('identity-modal').classList.remove('open');
+}
+
+// ─── QR Code ─────────────────────────────────────────────────────────────────
+let currentQRMember = null;
+
+function openQRModal(name) {
+  currentQRMember = name;
+  document.getElementById('qr-modal-name').textContent = `QR PromptPay — ${name}`;
+  document.getElementById('qr-modal-sub').textContent = 'สแกนเพื่อโอนเงินได้เลย';
+  renderQRModalContent(name);
+  document.getElementById('qr-modal').classList.add('open');
+}
+
+function renderQRModalContent(name) {
+  const qr = state.qrcodes && state.qrcodes[name];
+  const imgEl = document.getElementById('qr-modal-img');
+  const actEl = document.getElementById('qr-modal-actions');
+  const identity = getIdentity();
+  const canEdit = !isSharedSession || identity === name || !identity;
+
+  if (qr) {
+    imgEl.innerHTML = `<div class="qr-img-wrap"><img src="${qr}" alt="QR ${escHtml(name)}"></div>`;
+  } else {
+    imgEl.innerHTML = `<div class="qr-empty">📱<br><br>ยังไม่มี QR Code<br><span style="font-size:12px">อัพโหลดรูป QR PromptPay ของ ${escHtml(name)}</span></div>`;
+  }
+
+  let btns = '';
+  if (canEdit) {
+    btns += `<button class="btn btn-primary" onclick="document.getElementById('qr-file-input').click()" style="margin-bottom:8px">
+      📷 ${qr ? 'เปลี่ยน QR ใหม่' : 'อัพโหลด QR Code'}
+    </button>`;
+    if (qr) {
+      btns += `<button class="btn btn-ghost btn-sm" onclick="deleteQR('${escAttr(name)}')" style="width:100%;color:var(--red);border-color:rgba(248,113,113,.4);margin-bottom:8px">
+        🗑 ลบ QR
+      </button>`;
+    }
+  }
+  btns += `<button class="btn btn-ghost" onclick="closeQRModal()" style="width:100%">ปิด</button>`;
+  actEl.innerHTML = btns;
+}
+
+function closeQRModal() {
+  document.getElementById('qr-modal').classList.remove('open');
+  currentQRMember = null;
+}
+
+async function handleQRUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 8 * 1024 * 1024) { toast('ไฟล์ใหญ่เกินไป (สูงสุด 8MB)'); event.target.value = ''; return; }
+  try {
+    const compressed = await compressImage(file);
+    if (!state.qrcodes) state.qrcodes = {};
+    state.qrcodes[currentQRMember] = compressed;
+    saveState();
+    renderQRModalContent(currentQRMember);
+    renderMembers();
+    toast('อัพโหลด QR แล้ว ✓');
+  } catch (e) {
+    toast('อัพโหลดไม่สำเร็จ');
+  }
+  event.target.value = '';
+}
+
+function deleteQR(name) {
+  if (!confirm(`ลบ QR Code ของ ${name}?`)) return;
+  if (state.qrcodes) delete state.qrcodes[name];
+  saveState();
+  renderQRModalContent(name);
+  renderMembers();
+  toast('ลบ QR แล้ว');
+}
+
+async function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const MAX = 700;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h / w * MAX); w = MAX; }
+          else { w = Math.round(w / h * MAX); h = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.88));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ─── Firebase Session ─────────────────────────────────────────────────────────
+function genId() { return Math.random().toString(36).slice(2, 8); }
 
 async function createSharedSession() {
   const id = genId();
@@ -363,7 +529,10 @@ async function createSharedSession() {
   pushUrlParam(id);
   startListening();
   renderSessionCard();
-  toast('สร้าง Session แล้ว — คัดลอกลิงก์ได้เลย ✓');
+  toast('สร้าง Session แล้ว ✓');
+  if (state.members.length > 0 && !getIdentity()) {
+    setTimeout(() => showIdentityModal(), 400);
+  }
 }
 
 function joinSession(id) {
@@ -376,9 +545,9 @@ function joinSession(id) {
 
 function leaveSession() {
   if (sessionRef) { sessionRef.off(); sessionRef = null; }
-  sessionId = null;
-  isSharedSession = false;
-  isSyncingFromRemote = false;
+  clearIdentity();
+  sessionId = null; isSharedSession = false;
+  isSyncingFromRemote = false; identityModalShown = false;
   pushUrlParam(null);
   loadLocalState();
   renderAll();
@@ -394,13 +563,26 @@ function startListening() {
     isSyncingFromRemote = true;
     state = normalizeState(data);
     renderAll();
+    renderSessionCard();
     if (document.querySelector('.tab.active')?.dataset.tab === 'results') renderResults();
     isSyncingFromRemote = false;
     setSyncDot('on');
+    if (!identityModalShown && !getIdentity() && state.members.length > 0) {
+      identityModalShown = true;
+      setTimeout(() => showIdentityModal(), 400);
+    }
   });
   db.ref('.info/connected').on('value', snap => {
     setSyncDot(snap.val() && isSharedSession ? 'on' : isSharedSession ? 'err' : 'off');
   });
+}
+
+function setSyncDot(status) {
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  if (status === 'on') { dot.style.background = 'var(--green)'; label.style.color = 'var(--accent2)'; label.textContent = sessionId; }
+  else if (status === 'err') { dot.style.background = 'var(--red)'; label.style.color = 'var(--red)'; label.textContent = 'ออฟไลน์'; }
+  else { dot.style.background = 'var(--muted)'; label.style.color = 'var(--muted)'; label.textContent = 'ส่วนตัว'; }
 }
 
 function getShareUrl() {
@@ -408,36 +590,15 @@ function getShareUrl() {
   url.searchParams.set('s', sessionId);
   return url.toString();
 }
-
 function copyShareLink() {
   navigator.clipboard.writeText(getShareUrl())
     .then(() => toast('คัดลอกลิงก์แล้ว ✓'))
-    .catch(() => toast('ไม่สามารถคัดลอกได้'));
+    .catch(() => toast('คัดลอกไม่ได้'));
 }
-
 function pushUrlParam(id) {
   const url = new URL(location.href.split('?')[0]);
   if (id) url.searchParams.set('s', id);
   history.replaceState({}, '', url.toString());
-}
-
-// ─── Sync Indicator ───────────────────────────────────────────────────────────
-function setSyncDot(status) {
-  const dot = document.getElementById('sync-dot');
-  const label = document.getElementById('sync-label');
-  if (status === 'on') {
-    dot.style.background = 'var(--green)';
-    label.style.color = 'var(--accent2)';
-    label.textContent = sessionId;
-  } else if (status === 'err') {
-    dot.style.background = 'var(--red)';
-    label.style.color = 'var(--red)';
-    label.textContent = 'ขาดการเชื่อมต่อ';
-  } else {
-    dot.style.background = 'var(--muted)';
-    label.style.color = 'var(--muted)';
-    label.textContent = 'ส่วนตัว';
-  }
 }
 
 // ─── Session Card ─────────────────────────────────────────────────────────────
@@ -446,28 +607,30 @@ function renderSessionCard() {
   if (!isSharedSession) {
     card.innerHTML = `
       <div class="card-title">แชร์กลุ่ม</div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">
-        สร้าง Session แชร์ลิงก์ให้กลุ่ม<br>ทุกคนเพิ่มรายการพร้อมกันได้เลย
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.7">
+        สร้าง Session แชร์ลิงก์ให้กลุ่ม<br>ทุกคนเพิ่มรายการและแนบ QR PromptPay ได้
       </p>
-      <button class="btn btn-primary" onclick="createSharedSession()">🔗 สร้าง Session แชร์กลุ่ม</button>
-    `;
-  } else {
-    card.innerHTML = `
-      <div class="card-title">Session แชร์กลุ่ม — กำลังเชื่อมต่อ</div>
-      <div class="session-id-box">${sessionId}</div>
-      <button class="btn btn-ghost btn-sm" onclick="copyShareLink()" style="width:100%;margin-bottom:8px">
-        📋 คัดลอกลิงก์ส่งให้เพื่อน
-      </button>
-      <button class="btn btn-ghost btn-sm" onclick="leaveSession()" style="width:100%;color:var(--red);border-color:rgba(248,113,113,.4)">
-        ✕ ออกจาก Session (กลับโหมดส่วนตัว)
-      </button>
-    `;
-    // Update title once connected
-    sessionRef.once('value', () => {
-      const title = card.querySelector('.card-title');
-      if (title) title.textContent = 'Session แชร์กลุ่ม — เชื่อมต่อแล้ว ✓';
-    });
+      <button class="btn btn-primary" onclick="createSharedSession()">🔗 สร้าง Session แชร์กลุ่ม</button>`;
+    return;
   }
+  const identity = getIdentity();
+  const meSection = identity
+    ? `<div class="identity-row">
+         <div><div class="me-label">ฉันคือ</div><div class="me-name">${escHtml(identity)}</div></div>
+         <div style="display:flex;gap:6px">
+           <button class="btn btn-ghost btn-sm" onclick="openQRModal('${escAttr(identity)}')" style="font-size:12px">📱 QR ของฉัน</button>
+           <button class="btn btn-ghost btn-sm" onclick="showIdentityModal()" style="font-size:12px">เปลี่ยน</button>
+         </div>
+       </div>`
+    : `<button class="btn btn-ghost btn-sm" onclick="showIdentityModal()" style="width:100%;margin-bottom:10px;color:var(--accent2);border-color:rgba(99,102,241,.5)">
+         👤 ระบุตัวตนของคุณ + แนบ QR
+       </button>`;
+  card.innerHTML = `
+    <div class="card-title">Session แชร์กลุ่ม</div>
+    ${meSection}
+    <div class="session-id-box">${sessionId}</div>
+    <button class="btn btn-ghost btn-sm" onclick="copyShareLink()" style="width:100%;margin-bottom:8px">📋 คัดลอกลิงก์ส่งให้เพื่อน</button>
+    <button class="btn btn-ghost btn-sm" onclick="leaveSession()" style="width:100%;color:var(--red);border-color:rgba(248,113,113,.3)">✕ ออกจาก Session</button>`;
 }
 
 // ─── Members ─────────────────────────────────────────────────────────────────
@@ -477,24 +640,27 @@ function addMember() {
   if (!name) return;
   if (state.members.includes(name)) { toast('มีชื่อนี้แล้ว'); return; }
   state.members.push(name);
-  saveState();
-  input.value = '';
-  renderMembers();
+  saveState(); input.value = ''; renderMembers();
 }
-
 function removeMember(name) {
-  const used = state.expenses.some(e => e.payer === name || e.participants.includes(name));
-  if (used) { toast(`${name} มีรายการค่าใช้จ่าย ลบไม่ได้`); return; }
+  if (state.expenses.some(e => e.payer === name || e.participants.includes(name))) {
+    toast(`${name} มีรายการค่าใช้จ่าย ลบไม่ได้`); return;
+  }
   state.members = state.members.filter(m => m !== name);
-  saveState();
-  renderMembers();
+  if (state.qrcodes) delete state.qrcodes[name];
+  saveState(); renderMembers();
 }
-
 function renderMembers() {
-  const el = document.getElementById('member-chips');
-  el.innerHTML = state.members.map(m => `
-    <div class="chip">${escHtml(m)}<button onclick="removeMember('${escAttr(m)}')" title="ลบ">×</button></div>
-  `).join('');
+  const identity = getIdentity();
+  document.getElementById('member-chips').innerHTML = state.members.map(m => {
+    const hasQR = !!(state.qrcodes && state.qrcodes[m]);
+    const isMe = m === identity;
+    return `<div class="chip${isMe ? ' chip-me' : ''}">
+      ${escHtml(m)}
+      <button class="chip-qr-btn${hasQR ? ' has-qr' : ''}" onclick="openQRModal('${escAttr(m)}')" title="${hasQR ? 'ดู/เปลี่ยน QR' : 'เพิ่ม QR'}">📱</button>
+      <button class="chip-del" onclick="removeMember('${escAttr(m)}')" title="ลบ">×</button>
+    </div>`;
+  }).join('');
 }
 
 // ─── Expense Modal ────────────────────────────────────────────────────────────
@@ -502,21 +668,17 @@ function openExpenseModal(id = null) {
   if (state.members.length < 2) { toast('เพิ่มสมาชิกอย่างน้อย 2 คนก่อน'); return; }
   editingExpenseId = id;
   document.getElementById('modal-title').textContent = id ? 'แก้ไขรายการ' : 'เพิ่มรายการค่าใช้จ่าย';
-
   const payer = document.getElementById('exp-payer');
   payer.innerHTML = state.members.map(m => `<option value="${escAttr(m)}">${escHtml(m)}</option>`).join('');
   renderParticipantChecks(state.members);
   document.getElementById('weight-toggle').checked = false;
   document.getElementById('weight-section').style.display = 'none';
-
   if (id) {
     const exp = state.expenses.find(e => e.id === id);
     document.getElementById('exp-name').value = exp.name;
     document.getElementById('exp-amount').value = exp.amount;
     payer.value = exp.payer;
-    document.querySelectorAll('.check-item').forEach(el => {
-      if (exp.participants.includes(el.dataset.name)) el.classList.add('selected');
-    });
+    document.querySelectorAll('.check-item').forEach(el => { if (exp.participants.includes(el.dataset.name)) el.classList.add('selected'); });
     if (exp.weights) {
       document.getElementById('weight-toggle').checked = true;
       document.getElementById('weight-section').style.display = 'block';
@@ -529,100 +691,55 @@ function openExpenseModal(id = null) {
   }
   document.getElementById('expense-modal').classList.add('open');
 }
-
-function closeExpenseModal() {
-  document.getElementById('expense-modal').classList.remove('open');
-  editingExpenseId = null;
-}
-
-document.getElementById('expense-modal').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeExpenseModal();
-});
+function closeExpenseModal() { document.getElementById('expense-modal').classList.remove('open'); editingExpenseId = null; }
+document.getElementById('expense-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeExpenseModal(); });
+document.getElementById('identity-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeIdentityModal(); });
+document.getElementById('qr-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeQRModal(); });
 
 function renderParticipantChecks(members) {
-  document.getElementById('exp-participants').innerHTML = members.map(m => `
-    <div class="check-item" data-name="${escAttr(m)}" onclick="toggleParticipant(this)">
-      <span>${escHtml(m)}</span>
-    </div>
-  `).join('');
+  document.getElementById('exp-participants').innerHTML = members.map(m =>
+    `<div class="check-item" data-name="${escAttr(m)}" onclick="toggleParticipant(this)"><span>${escHtml(m)}</span></div>`
+  ).join('');
 }
-
-function toggleParticipant(el) {
-  el.classList.toggle('selected');
-  if (document.getElementById('weight-toggle').checked) updateWeightInputs();
-}
-
-function toggleWeights() {
-  const on = document.getElementById('weight-toggle').checked;
-  document.getElementById('weight-section').style.display = on ? 'block' : 'none';
-  if (on) updateWeightInputs();
-}
-
-function getSelectedParticipants() {
-  return Array.from(document.querySelectorAll('.check-item.selected')).map(e => e.dataset.name);
-}
-
+function toggleParticipant(el) { el.classList.toggle('selected'); if (document.getElementById('weight-toggle').checked) updateWeightInputs(); }
+function toggleWeights() { const on = document.getElementById('weight-toggle').checked; document.getElementById('weight-section').style.display = on ? 'block' : 'none'; if (on) updateWeightInputs(); }
+function getSelectedParticipants() { return Array.from(document.querySelectorAll('.check-item.selected')).map(e => e.dataset.name); }
 function updateWeightInputs() {
   const selected = getSelectedParticipants();
   const existing = {};
-  document.querySelectorAll('.weight-item').forEach(el => {
-    existing[el.dataset.name] = el.querySelector('input').value;
-  });
+  document.querySelectorAll('.weight-item').forEach(el => { existing[el.dataset.name] = el.querySelector('input').value; });
   renderWeightInputs(selected, existing);
 }
-
 function renderWeightInputs(members, existing = {}) {
-  document.getElementById('exp-weights').innerHTML = members.map(m => `
-    <div class="weight-item" data-name="${escAttr(m)}">
-      <span>${escHtml(m)}</span>
-      <input type="number" min="0.1" step="0.1" value="${existing[m] || 1}" inputmode="decimal" style="width:60px">
-    </div>
-  `).join('');
+  document.getElementById('exp-weights').innerHTML = members.map(m =>
+    `<div class="weight-item" data-name="${escAttr(m)}"><span>${escHtml(m)}</span><input type="number" min="0.1" step="0.1" value="${existing[m] || 1}" inputmode="decimal" style="width:60px"></div>`
+  ).join('');
 }
-
 function saveExpense() {
   const name = document.getElementById('exp-name').value.trim();
   const amount = parseFloat(document.getElementById('exp-amount').value);
   const payer = document.getElementById('exp-payer').value;
   const participants = getSelectedParticipants();
-
   if (!name) { toast('ระบุชื่อรายการด้วย'); return; }
   if (!amount || amount <= 0) { toast('ระบุราคาด้วย'); return; }
-  if (participants.length === 0) { toast('เลือกคนร่วมหารอย่างน้อย 1 คน'); return; }
-
+  if (!participants.length) { toast('เลือกคนร่วมหารอย่างน้อย 1 คน'); return; }
   let weights = null;
   if (document.getElementById('weight-toggle').checked) {
     weights = {};
-    document.querySelectorAll('.weight-item').forEach(el => {
-      weights[el.dataset.name] = parseFloat(el.querySelector('input').value) || 1;
-    });
+    document.querySelectorAll('.weight-item').forEach(el => { weights[el.dataset.name] = parseFloat(el.querySelector('input').value) || 1; });
   }
-
   if (editingExpenseId) {
     const idx = state.expenses.findIndex(e => e.id === editingExpenseId);
     state.expenses[idx] = { id: editingExpenseId, name, amount, payer, participants, weights };
   } else {
     state.expenses.push({ id: Date.now().toString(), name, amount, payer, participants, weights });
   }
-
-  saveState();
-  renderExpenses();
-  closeExpenseModal();
-  toast('บันทึกแล้ว ✓');
+  saveState(); renderExpenses(); closeExpenseModal(); toast('บันทึกแล้ว ✓');
 }
-
-function deleteExpense(id) {
-  state.expenses = state.expenses.filter(e => e.id !== id);
-  saveState();
-  renderExpenses();
-}
-
+function deleteExpense(id) { state.expenses = state.expenses.filter(e => e.id !== id); saveState(); renderExpenses(); }
 function renderExpenses() {
   const el = document.getElementById('expense-list');
-  if (state.expenses.length === 0) {
-    el.innerHTML = `<div class="empty"><span class="icon">🧾</span>ยังไม่มีรายการค่าใช้จ่าย<br>กดปุ่มด้านบนเพื่อเพิ่ม</div>`;
-    return;
-  }
+  if (!state.expenses.length) { el.innerHTML = `<div class="empty"><span class="icon">🧾</span>ยังไม่มีรายการค่าใช้จ่าย<br>กดปุ่มด้านบนเพื่อเพิ่ม</div>`; return; }
   el.innerHTML = state.expenses.map(exp => `
     <div class="expense-item">
       <div class="expense-info">
@@ -637,8 +754,7 @@ function renderExpenses() {
           <button class="btn btn-danger" onclick="deleteExpense('${exp.id}')">🗑</button>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
 // ─── Calculation ──────────────────────────────────────────────────────────────
@@ -653,7 +769,6 @@ function calcPerPerson(exp) {
   }
   return result;
 }
-
 function calcAll() {
   const paid = {}, owed = {};
   state.members.forEach(m => { paid[m] = 0; owed[m] = 0; });
@@ -666,7 +781,6 @@ function calcAll() {
   state.members.forEach(m => { net[m] = (paid[m] || 0) - (owed[m] || 0); });
   return { paid, owed, net };
 }
-
 function minTransfers(net) {
   const creditors = [], debtors = [];
   Object.entries(net).forEach(([name, val]) => {
@@ -680,8 +794,7 @@ function minTransfers(net) {
   while (i < debtors.length && j < creditors.length) {
     const pay = Math.min(debtors[i].amount, creditors[j].amount);
     transfers.push({ from: debtors[i].name, to: creditors[j].name, amount: Math.round(pay) });
-    debtors[i].amount -= pay;
-    creditors[j].amount -= pay;
+    debtors[i].amount -= pay; creditors[j].amount -= pay;
     if (debtors[i].amount < 0.5) i++;
     if (creditors[j].amount < 0.5) j++;
   }
@@ -691,91 +804,82 @@ function minTransfers(net) {
 // ─── Results ─────────────────────────────────────────────────────────────────
 function renderResults() {
   const el = document.getElementById('results-content');
-  if (state.expenses.length === 0) {
-    el.innerHTML = `<div class="empty"><span class="icon">📊</span>ยังไม่มีข้อมูลค่าใช้จ่าย<br>ไปที่แท็บ "ค่าใช้จ่าย" เพื่อเพิ่มรายการ</div>`;
-    return;
-  }
+  if (!state.expenses.length) { el.innerHTML = `<div class="empty"><span class="icon">📊</span>ยังไม่มีข้อมูลค่าใช้จ่าย<br>ไปที่แท็บ "ค่าใช้จ่าย" เพื่อเพิ่มรายการ</div>`; return; }
   const { paid, owed, net } = calcAll();
   const transfers = minTransfers(net);
   let html = '';
 
   html += `<div class="section-title">ส่วนที่ 1 — สรุปต่อรายการ</div>`;
-  html += `<div class="card" style="overflow-x:auto"><table class="result-table">
-    <thead><tr><th>รายการ</th><th class="text-right">ราคา</th><th>ออก</th><th>ต่อหัว</th></tr></thead><tbody>`;
+  html += `<div class="card" style="overflow-x:auto"><table class="result-table"><thead><tr><th>รายการ</th><th class="text-right">ราคา</th><th>ออก</th><th>ต่อหัว</th></tr></thead><tbody>`;
   state.expenses.forEach(exp => {
     const shares = calcPerPerson(exp);
-    const shareStr = exp.participants.map(m => `${escHtml(m)}: ฿${fmt(shares[m])}`).join('<br>');
-    html += `<tr><td><b>${escHtml(exp.name)}</b></td><td class="text-right">฿${fmt(exp.amount)}</td><td>${escHtml(exp.payer)}</td><td style="font-size:12px">${shareStr}</td></tr>`;
+    html += `<tr><td><b>${escHtml(exp.name)}</b></td><td class="text-right">฿${fmt(exp.amount)}</td><td>${escHtml(exp.payer)}</td><td style="font-size:12px">${exp.participants.map(m => `${escHtml(m)}: ฿${fmt(shares[m])}`).join('<br>')}</td></tr>`;
   });
   html += `</tbody></table></div>`;
 
   html += `<div class="section-title">ส่วนที่ 2 — สรุปต่อคน</div>`;
-  html += `<div class="card" style="overflow-x:auto"><table class="result-table">
-    <thead><tr><th>ชื่อ</th><th class="text-right">ออกก่อน</th><th class="text-right">ต้องจ่าย</th><th>ยอดสุทธิ</th></tr></thead><tbody>`;
+  html += `<div class="card" style="overflow-x:auto"><table class="result-table"><thead><tr><th>ชื่อ</th><th class="text-right">ออกก่อน</th><th class="text-right">ต้องจ่าย</th><th>ยอดสุทธิ</th></tr></thead><tbody>`;
   state.members.forEach(m => {
     const n = net[m];
-    let badge, statusText;
-    if (n > 0.5) { badge = 'badge-green'; statusText = `รับคืน ฿${fmt(n)}`; }
-    else if (n < -0.5) { badge = 'badge-red'; statusText = `ต้องจ่าย ฿${fmt(-n)}`; }
-    else { badge = 'badge-neutral'; statusText = 'เสมอ'; }
-    html += `<tr><td><b>${escHtml(m)}</b></td><td class="text-right">฿${fmt(paid[m])}</td><td class="text-right">฿${fmt(owed[m])}</td><td><span class="badge ${badge}">${statusText}</span></td></tr>`;
+    let badge, txt;
+    if (n > 0.5) { badge = 'badge-green'; txt = `รับคืน ฿${fmt(n)}`; }
+    else if (n < -0.5) { badge = 'badge-red'; txt = `ต้องจ่าย ฿${fmt(-n)}`; }
+    else { badge = 'badge-neutral'; txt = 'เสมอ'; }
+    html += `<tr><td><b>${escHtml(m)}</b></td><td class="text-right">฿${fmt(paid[m])}</td><td class="text-right">฿${fmt(owed[m])}</td><td><span class="badge ${badge}">${txt}</span></td></tr>`;
   });
   html += `</tbody></table></div>`;
 
   html += `<div class="section-title">ส่วนที่ 3 — รายการโอนเงิน</div>`;
-  if (transfers.length === 0) {
+  if (!transfers.length) {
     html += `<div class="card"><p style="color:var(--green);text-align:center;font-weight:600">✅ ทุกคนจ่ายเท่ากัน ไม่ต้องโอน!</p></div>`;
   } else {
     html += `<p style="font-size:13px;color:var(--muted);margin-bottom:8px">ทั้งหมด ${transfers.length} ธุรกรรม</p>`;
     transfers.sort((a, b) => b.amount - a.amount).forEach(t => {
+      const recipientQR = state.qrcodes && state.qrcodes[t.to];
       html += `<div class="transfer-item">
         <div class="transfer-names">
           <span style="color:var(--red)">${escHtml(t.from)}</span>
           <span class="arrow">→</span>
           <span style="color:var(--green)">${escHtml(t.to)}</span>
         </div>
-        <div class="transfer-amount">฿${fmt(t.amount)}</div>
+        <div class="transfer-right">
+          <div class="transfer-amount">฿${fmt(t.amount)}</div>
+          ${recipientQR ? `<button class="qr-scan-btn" onclick="openQRModal('${escAttr(t.to)}')">📱 QR</button>` : ''}
+        </div>
       </div>`;
     });
   }
   el.innerHTML = html;
 }
 
-// ─── Session Management ───────────────────────────────────────────────────────
+// ─── Session Actions ──────────────────────────────────────────────────────────
 function newSession() {
-  if (!confirm('ล้างข้อมูลทั้งหมด? การกระทำนี้ไม่สามารถย้อนกลับได้')) return;
+  if (!confirm('ล้างข้อมูลทั้งหมด?')) return;
   if (isSharedSession) leaveSession();
-  state = { members: [], expenses: [] };
-  persistLocal();
-  renderAll();
-  toast('ล้างข้อมูลแล้ว');
+  state = { members: [], expenses: [], qrcodes: {} };
+  persistLocal(); renderAll(); toast('ล้างข้อมูลแล้ว');
 }
-
 function exportSession() {
-  if (state.expenses.length === 0) { toast('ยังไม่มีข้อมูล'); return; }
-  const { paid, owed, net } = calcAll();
+  if (!state.expenses.length) { toast('ยังไม่มีข้อมูล'); return; }
+  const { net } = calcAll();
   const transfers = minTransfers(net);
   let text = '💸 PayPerUsed — สรุปค่าใช้จ่าย\n' + '─'.repeat(30) + '\n';
-  text += `📋 รายการทั้งหมด ${state.expenses.length} รายการ\n\n👤 สรุปต่อคน\n`;
+  text += `📋 ${state.expenses.length} รายการ\n\n👤 สรุปต่อคน\n`;
   state.members.forEach(m => {
     const n = net[m];
     text += `  ${m}: ${n > 0.5 ? `รับคืน ฿${fmt(n)}` : n < -0.5 ? `ต้องจ่าย ฿${fmt(-n)}` : 'เสมอ'}\n`;
   });
   text += '\n💸 รายการโอน\n';
-  if (transfers.length === 0) { text += '  ไม่ต้องโอน\n'; }
+  if (!transfers.length) text += '  ไม่ต้องโอน\n';
   else transfers.forEach(t => { text += `  ${t.from} → ${t.to}: ฿${fmt(t.amount)}\n`; });
-  navigator.clipboard.writeText(text).then(() => toast('คัดลอกแล้ว ✓')).catch(() => toast('ไม่สามารถคัดลอกได้'));
+  navigator.clipboard.writeText(text).then(() => toast('คัดลอกแล้ว ✓')).catch(() => toast('คัดลอกไม่ได้'));
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function fmt(n) { return Math.round(n).toLocaleString('th-TH'); }
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(s) { return String(s).replace(/'/g,'&#39;').replace(/"/g,'&quot;'); }
-
-function renderAll() {
-  renderMembers();
-  renderExpenses();
-}
+function renderAll() { renderMembers(); renderExpenses(); }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 const urlSession = new URLSearchParams(location.search).get('s');
@@ -789,10 +893,7 @@ if (urlSession) {
 }
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-
-document.getElementById('new-member').addEventListener('keydown', e => {
-  if (e.key === 'Enter') addMember();
-});
+document.getElementById('new-member').addEventListener('keydown', e => { if (e.key === 'Enter') addMember(); });
 </script>
 </body>
 </html>
