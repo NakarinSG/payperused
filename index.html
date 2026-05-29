@@ -119,12 +119,20 @@
 
   .transfer-item {
     background: var(--surface2); border-radius: 10px; padding: 12px 14px;
-    margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    margin-bottom: 8px; display: flex; flex-direction: column; gap: 10px;
   }
+  .transfer-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .transfer-names { font-size: 15px; flex: 1; min-width: 0; }
   .transfer-names .arrow { color: var(--muted); margin: 0 6px; }
-  .transfer-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .transfer-amount { font-size: 17px; font-weight: 700; color: var(--accent2); }
+  .transfer-amount { font-size: 17px; font-weight: 700; color: var(--accent2); flex-shrink: 0; }
+  .transfer-actions { display: flex; gap: 8px; }
+  .pay-btn {
+    flex: 2; background: var(--accent); color: #fff; border: none;
+    border-radius: 8px; padding: 9px; font-size: 14px; font-weight: 700;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .pay-btn:active { opacity: .85; transform: scale(.98); }
   .qr-scan-btn {
     background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.3);
     color: var(--green); border-radius: 8px; padding: 6px 10px; font-size: 13px; font-weight: 600;
@@ -134,11 +142,17 @@
   .transfer-item.settled { opacity: .5; }
   .transfer-item.settled .transfer-amount { text-decoration: line-through; }
   .settle-btn {
-    background: var(--surface); border: 1px solid var(--border);
-    color: var(--muted); border-radius: 8px; padding: 6px 9px; font-size: 13px; font-weight: 600;
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 8px; padding: 9px; font-size: 13px; font-weight: 600;
     cursor: pointer; -webkit-tap-highlight-color: transparent; white-space: nowrap;
   }
   .settle-btn.done { background: rgba(34,197,94,.18); border-color: rgba(34,197,94,.4); color: var(--green); }
+  .slip-thumb {
+    background: var(--surface2); border-radius: 12px; padding: 12px;
+    display: flex; justify-content: center; margin-bottom: 12px;
+  }
+  .slip-thumb img { max-width: 100%; max-height: 320px; border-radius: 8px; display: block; }
+  .pay-sec-label { font-size: 13px; font-weight: 600; color: var(--muted); margin: 4px 0 8px; }
 
   .summary-card { display: flex; gap: 10px; }
   .summary-box {
@@ -333,6 +347,19 @@
   </div>
 </div>
 
+<!-- Pay / Transfer Modal -->
+<div class="form-modal-backdrop" id="pay-modal">
+  <div class="form-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="pay-title"></div>
+    <div class="modal-sub" id="pay-sub"></div>
+    <div id="pay-qr"></div>
+    <div id="pay-slip"></div>
+    <input type="file" id="slip-file-input" accept="image/*" style="display:none" onchange="handleSlipUpload(event)">
+    <div id="pay-actions"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -350,10 +377,10 @@ firebase.initializeApp({
 const db = firebase.database();
 
 // ─── State ────────────────────────────────────────────────────────────────────
-let state = { members: [], expenses: [], qrcodes: {}, settled: {}, tripName: '' };
+let state = { members: [], expenses: [], qrcodes: {}, settled: {}, slips: {}, tripName: '' };
 let editingExpenseId = null;
 
-const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 วัน
+const SESSION_TTL_MS = 15 * 24 * 60 * 60 * 1000; // 15 วัน
 
 // ─── Session ──────────────────────────────────────────────────────────────────
 let sessionId = null, isSharedSession = false;
@@ -382,9 +409,10 @@ document.querySelectorAll('.tab').forEach(t => {
 // ─── Storage ──────────────────────────────────────────────────────────────────
 function loadLocalState() {
   const s = localStorage.getItem('payperused');
-  state = s ? JSON.parse(s) : { members: [], expenses: [], qrcodes: {}, settled: {}, tripName: '' };
+  state = s ? JSON.parse(s) : { members: [], expenses: [], qrcodes: {}, settled: {}, slips: {}, tripName: '' };
   if (!state.qrcodes) state.qrcodes = {};
   if (!state.settled) state.settled = {};
+  if (!state.slips) state.slips = {};
   if (state.tripName == null) state.tripName = '';
 }
 
@@ -408,6 +436,7 @@ function normalizeState(data) {
     expenses: toArr(data.expenses),
     qrcodes: data.qrcodes || {},
     settled: data.settled || {},
+    slips: data.slips || {},
     tripName: data.tripName || ''
   };
 }
@@ -746,6 +775,7 @@ function closeExpenseModal() { document.getElementById('expense-modal').classLis
 document.getElementById('expense-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeExpenseModal(); });
 document.getElementById('identity-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeIdentityModal(); });
 document.getElementById('qr-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeQRModal(); });
+document.getElementById('pay-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closePayModal(); });
 
 function renderParticipantChecks(members) {
   document.getElementById('exp-participants').innerHTML = members.map(m =>
@@ -898,19 +928,22 @@ function renderResults() {
     const doneCount = sorted.filter(t => state.settled[settleKey(t)]).length;
     html += `<p class="settle-progress">โอนแล้ว ${doneCount}/${sorted.length} ธุรกรรม</p>`;
     sorted.forEach(t => {
-      const recipientQR = state.qrcodes && state.qrcodes[t.to];
       const key = settleKey(t);
       const done = !!state.settled[key];
+      const hasSlip = !!(state.slips && state.slips[key]);
       html += `<div class="transfer-item${done ? ' settled' : ''}">
-        <div class="transfer-names">
-          <span style="color:var(--red)">${escHtml(t.from)}</span>
-          <span class="arrow">→</span>
-          <span style="color:var(--green)">${escHtml(t.to)}</span>
-        </div>
-        <div class="transfer-right">
+        <div class="transfer-top">
+          <div class="transfer-names">
+            <span style="color:var(--red)">${escHtml(t.from)}</span>
+            <span class="arrow">→</span>
+            <span style="color:var(--green)">${escHtml(t.to)}</span>
+            ${hasSlip ? '<span title="มีสลิป" style="margin-left:6px">📎</span>' : ''}
+          </div>
           <div class="transfer-amount">฿${fmt(t.amount)}</div>
-          ${recipientQR ? `<button class="qr-scan-btn" onclick="openQRModal('${escAttr(t.to)}')">📱 QR</button>` : ''}
-          <button class="settle-btn${done ? ' done' : ''}" onclick="toggleSettled('${escAttr(key)}')">${done ? '✓ โอนแล้ว' : 'โอนแล้ว?'}</button>
+        </div>
+        <div class="transfer-actions">
+          <button class="pay-btn" onclick="openPayModal('${escAttr(t.from)}','${escAttr(t.to)}',${t.amount})">💸 โอนเงิน / ดู QR</button>
+          <button class="settle-btn${done ? ' done' : ''}" onclick="toggleSettled('${escAttr(key)}')">${done ? '✓ โอนแล้ว' : 'ยังไม่โอน'}</button>
         </div>
       </div>`;
     });
@@ -926,13 +959,84 @@ function toggleSettled(key) {
   else state.settled[key] = true;
   saveState();
   renderResults();
+  if (currentPay && currentPay.key === key) renderPayModal();
+}
+
+// ─── Pay Modal (QR + Slip) ────────────────────────────────────────────────────
+let currentPay = null;
+
+function openPayModal(from, to, amount) {
+  currentPay = { from, to, amount, key: settleKey({ from, to, amount }) };
+  renderPayModal();
+  document.getElementById('pay-modal').classList.add('open');
+}
+
+function closePayModal() {
+  document.getElementById('pay-modal').classList.remove('open');
+  currentPay = null;
+}
+
+function renderPayModal() {
+  const p = currentPay;
+  if (!p) return;
+  document.getElementById('pay-title').textContent = `${p.from} → ${p.to}`;
+  document.getElementById('pay-sub').textContent = `ยอดโอน ฿${fmt(p.amount)}`;
+
+  // ผู้รับ QR
+  const qr = state.qrcodes && state.qrcodes[p.to];
+  document.getElementById('pay-qr').innerHTML = qr
+    ? `<div class="pay-sec-label">📱 สแกน QR ของ ${escHtml(p.to)} เพื่อโอน</div><div class="qr-img-wrap"><img src="${qr}" alt="QR ${escHtml(p.to)}"></div>`
+    : `<div class="qr-empty">📱<br><br>${escHtml(p.to)} ยังไม่ได้ใส่ QR PromptPay<br><span style="font-size:12px">บอกให้เจ้าตัวไปแนบ QR ในแท็บสมาชิก</span></div>`;
+
+  // สลิป
+  const slip = state.slips && state.slips[p.key];
+  document.getElementById('pay-slip').innerHTML = slip
+    ? `<div class="pay-sec-label">📎 สลิปการโอน</div><div class="slip-thumb"><img src="${slip}" alt="สลิป"></div>`
+    : '';
+
+  // ปุ่ม
+  const done = !!state.settled[p.key];
+  let btns = `<button class="btn btn-ghost" onclick="document.getElementById('slip-file-input').click()" style="width:100%;margin-bottom:8px">📷 ${slip ? 'เปลี่ยนสลิป' : 'แนบสลิปการโอน'}</button>`;
+  if (slip) btns += `<button class="btn btn-ghost btn-sm" onclick="deleteSlip()" style="width:100%;margin-bottom:8px;color:var(--red);border-color:rgba(248,113,113,.4)">🗑 ลบสลิป</button>`;
+  btns += `<button class="btn ${done ? 'btn-ghost' : 'btn-primary'}" onclick="toggleSettled('${escAttr(p.key)}')" style="width:100%;margin-bottom:8px${done ? ';color:var(--green);border-color:rgba(34,197,94,.4)' : ''}">${done ? '✓ โอนแล้ว (กดเพื่อยกเลิก)' : 'ทำเครื่องหมายว่าโอนแล้ว'}</button>`;
+  btns += `<button class="btn btn-ghost" onclick="closePayModal()" style="width:100%">ปิด</button>`;
+  document.getElementById('pay-actions').innerHTML = btns;
+}
+
+async function handleSlipUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 8 * 1024 * 1024) { toast('ไฟล์ใหญ่เกินไป (สูงสุด 8MB)'); event.target.value = ''; return; }
+  try {
+    const compressed = await compressImage(file);
+    if (!state.slips) state.slips = {};
+    state.slips[currentPay.key] = compressed;
+    state.settled[currentPay.key] = true; // แนบสลิป = ถือว่าโอนแล้ว
+    saveState();
+    renderPayModal();
+    renderResults();
+    toast('แนบสลิปแล้ว ✓');
+  } catch (e) {
+    toast('แนบสลิปไม่สำเร็จ');
+  }
+  event.target.value = '';
+}
+
+function deleteSlip() {
+  if (!currentPay) return;
+  if (!confirm('ลบสลิปการโอนนี้?')) return;
+  if (state.slips) delete state.slips[currentPay.key];
+  saveState();
+  renderPayModal();
+  renderResults();
+  toast('ลบสลิปแล้ว');
 }
 
 // ─── Session Actions ──────────────────────────────────────────────────────────
 function newSession() {
   if (!confirm('ล้างข้อมูลทั้งหมด?')) return;
   if (isSharedSession) leaveSession();
-  state = { members: [], expenses: [], qrcodes: {}, settled: {}, tripName: '' };
+  state = { members: [], expenses: [], qrcodes: {}, settled: {}, slips: {}, tripName: '' };
   persistLocal(); renderAll(); toast('ล้างข้อมูลแล้ว');
 }
 function exportSession() {
