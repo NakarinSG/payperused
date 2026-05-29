@@ -27,60 +27,44 @@
   }
 
   html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; }
-
   body { display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; }
 
-  /* Header */
   header {
     padding: 16px 16px 12px;
     padding-top: calc(16px + env(safe-area-inset-top, 0px));
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
+    background: var(--surface); border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between;
   }
   header h1 { font-size: 20px; font-weight: 700; color: var(--accent2); }
-  header span { font-size: 12px; color: var(--muted); }
+  .sync-badge { display: flex; align-items: center; gap: 6px; cursor: default; }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+  .sync-label { font-size: 12px; color: var(--muted); font-family: monospace; }
 
-  /* Tabs */
-  .tabs {
-    display: flex;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-  }
+  .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
   .tab {
     flex: 1; padding: 12px 4px; text-align: center; font-size: 13px; font-weight: 500;
     color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
-    transition: color .2s, border-color .2s;
-    -webkit-tap-highlight-color: transparent;
+    transition: color .2s, border-color .2s; -webkit-tap-highlight-color: transparent;
   }
   .tab.active { color: var(--accent2); border-bottom-color: var(--accent); }
 
-  /* Main content */
   main { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: calc(16px + var(--safe-bottom)); }
-
   .page { display: none; }
   .page.active { display: block; }
 
-  /* Cards */
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 14px; margin-bottom: 12px;
-  }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
   .card-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
 
-  /* Form elements */
   input, select {
     width: 100%; background: var(--surface2); border: 1px solid var(--border);
     border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 15px;
-    outline: none; transition: border-color .2s;
-    -webkit-appearance: none;
+    outline: none; transition: border-color .2s; -webkit-appearance: none;
   }
   input:focus, select:focus { border-color: var(--accent); }
   input::placeholder { color: var(--muted); }
   label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; margin-top: 10px; }
   label:first-child { margin-top: 0; }
 
-  /* Buttons */
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     padding: 11px 18px; border-radius: 8px; font-size: 15px; font-weight: 600;
@@ -93,7 +77,6 @@
   .btn-danger { background: transparent; border: none; color: var(--red); padding: 6px; font-size: 18px; }
   .btn-sm { padding: 7px 12px; font-size: 13px; }
 
-  /* Member chips */
   .member-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
   .chip {
     display: flex; align-items: center; gap: 6px;
@@ -106,7 +89,6 @@
   .add-row { display: flex; gap: 8px; }
   .add-row input { flex: 1; }
 
-  /* Expense list */
   .expense-item {
     background: var(--surface2); border-radius: 10px; padding: 12px;
     margin-bottom: 8px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
@@ -116,43 +98,34 @@
   .expense-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
   .expense-amount { font-weight: 700; font-size: 16px; color: var(--accent2); white-space: nowrap; }
 
-  /* Checkbox grid */
   .check-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
   .check-item {
     display: flex; align-items: center; gap: 6px;
     background: var(--surface2); border: 1px solid var(--border);
     border-radius: 8px; padding: 6px 10px; cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: border-color .15s;
+    -webkit-tap-highlight-color: transparent; transition: border-color .15s;
   }
   .check-item.selected { border-color: var(--accent); background: rgba(99,102,241,.15); }
   .check-item input[type=checkbox] { display: none; }
   .check-item span { font-size: 14px; }
 
-  /* Weight inputs */
   .weight-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
   .weight-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
   .weight-item span { font-size: 12px; color: var(--muted); }
   .weight-item input { width: 60px; text-align: center; padding: 7px 8px; }
 
-  /* Section divider */
   .section-title {
     font-size: 14px; font-weight: 700; color: var(--accent2);
     margin: 20px 0 10px; display: flex; align-items: center; gap: 8px;
   }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-  /* Result tables */
   .result-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .result-table th { color: var(--muted); font-weight: 600; text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
   .result-table td { padding: 8px 8px; border-bottom: 1px solid rgba(71,85,105,.4); vertical-align: top; }
   .result-table tr:last-child td { border-bottom: none; }
   .text-right { text-align: right !important; }
-  .text-green { color: var(--green); font-weight: 600; }
-  .text-red { color: var(--red); font-weight: 600; }
-  .text-muted { color: var(--muted); }
 
-  /* Transfer list */
   .transfer-item {
     background: var(--surface2); border-radius: 10px; padding: 12px 14px;
     margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;
@@ -161,32 +134,20 @@
   .transfer-names .arrow { color: var(--muted); margin: 0 6px; }
   .transfer-amount { font-size: 17px; font-weight: 700; color: var(--accent2); }
 
-  /* Empty state */
   .empty { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 14px; line-height: 1.8; }
   .empty .icon { font-size: 40px; display: block; margin-bottom: 8px; }
 
-  /* Badge */
-  .badge {
-    display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: 600;
-  }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: 600; }
   .badge-green { background: rgba(34,197,94,.15); color: var(--green); }
   .badge-red { background: rgba(248,113,113,.15); color: var(--red); }
   .badge-neutral { background: var(--surface2); color: var(--muted); }
 
-  /* Toggle weight */
   .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
   .toggle-label { font-size: 13px; color: var(--muted); }
   .toggle { position: relative; width: 44px; height: 24px; }
   .toggle input { opacity: 0; width: 0; height: 0; }
-  .slider {
-    position: absolute; inset: 0; background: var(--surface2); border-radius: 24px;
-    cursor: pointer; transition: background .2s;
-    border: 1px solid var(--border);
-  }
-  .slider::before {
-    content: ''; position: absolute; width: 18px; height: 18px;
-    left: 2px; top: 2px; background: var(--muted); border-radius: 50%; transition: transform .2s, background .2s;
-  }
+  .slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 24px; cursor: pointer; transition: background .2s; border: 1px solid var(--border); }
+  .slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 2px; top: 2px; background: var(--muted); border-radius: 50%; transition: transform .2s, background .2s; }
   .toggle input:checked + .slider { background: rgba(99,102,241,.3); border-color: var(--accent); }
   .toggle input:checked + .slider::before { transform: translateX(20px); background: var(--accent2); }
 
@@ -194,12 +155,12 @@
     position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px);
     background: var(--surface2); border: 1px solid var(--border); color: var(--text);
     padding: 10px 20px; border-radius: 20px; font-size: 14px;
-    opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; z-index: 100;
-    white-space: nowrap;
+    opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; z-index: 100; white-space: nowrap;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   select option { background: var(--surface2); }
+
   .form-modal-backdrop {
     position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 50;
     display: flex; align-items: flex-end; justify-content: center;
@@ -215,13 +176,28 @@
   .form-modal-backdrop.open .form-modal { transform: translateY(0); }
   .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 4px; margin: 0 auto 16px; }
   .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+
+  .session-id-box {
+    background: var(--surface2); border-radius: 8px; padding: 10px 12px;
+    font-family: monospace; font-size: 18px; letter-spacing: .15em;
+    text-align: center; color: var(--accent2); font-weight: 700; margin-bottom: 10px;
+  }
+  .loading-spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid var(--border); border-top-color: var(--accent2);
+    border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 
 <header>
   <h1>💸 PayPerUsed</h1>
-  <span id="session-label">เซสชันปัจจุบัน</span>
+  <div class="sync-badge">
+    <span class="sync-dot" id="sync-dot"></span>
+    <span class="sync-label" id="sync-label">ส่วนตัว</span>
+  </div>
 </header>
 
 <nav class="tabs">
@@ -242,9 +218,12 @@
       </div>
     </div>
 
-    <div class="card" style="margin-top:8px">
-      <div class="card-title">จัดการเซสชัน</div>
-      <button class="btn btn-ghost btn-sm" onclick="newSession()" style="width:100%;margin-bottom:8px">🔄 เริ่มเซสชันใหม่</button>
+    <!-- Session card (rendered by JS) -->
+    <div class="card" id="session-card"></div>
+
+    <div class="card">
+      <div class="card-title">อื่นๆ</div>
+      <button class="btn btn-ghost btn-sm" onclick="newSession()" style="width:100%;margin-bottom:8px">🔄 ล้างข้อมูลทั้งหมด</button>
       <button class="btn btn-ghost btn-sm" onclick="exportSession()" style="width:100%">📋 คัดลอกสรุปข้อความ</button>
     </div>
   </div>
@@ -301,25 +280,38 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script>
-// ─── State ───────────────────────────────────────────────────────────────────
+// ─── Firebase ─────────────────────────────────────────────────────────────────
+firebase.initializeApp({
+  apiKey: "AIzaSyAhkK7cl2-ek9LrQGhisyvKacQ21Qru6Xs",
+  authDomain: "payperused.firebaseapp.com",
+  databaseURL: "https://payperused-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "payperused",
+  storageBucket: "payperused.firebasestorage.app",
+  messagingSenderId: "669339319561",
+  appId: "1:669339319561:web:4a74ca139700c6c3b667d8"
+});
+const db = firebase.database();
+
+// ─── App State ────────────────────────────────────────────────────────────────
 let state = { members: [], expenses: [] };
 let editingExpenseId = null;
 
-function loadState() {
-  const s = localStorage.getItem('payperused');
-  if (s) state = JSON.parse(s);
-}
-function saveState() {
-  localStorage.setItem('payperused', JSON.stringify(state));
-}
+// ─── Session State ────────────────────────────────────────────────────────────
+let sessionId = null;
+let isSharedSession = false;
+let isSyncingFromRemote = false;
+let sessionRef = null;
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2000);
+  setTimeout(() => el.classList.remove('show'), 2200);
 }
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
@@ -332,6 +324,151 @@ document.querySelectorAll('.tab').forEach(t => {
     if (t.dataset.tab === 'results') renderResults();
   });
 });
+
+// ─── Local Storage ────────────────────────────────────────────────────────────
+function loadLocalState() {
+  const s = localStorage.getItem('payperused');
+  state = s ? JSON.parse(s) : { members: [], expenses: [] };
+}
+
+function persistLocal() {
+  localStorage.setItem('payperused', JSON.stringify(state));
+}
+
+// ─── Save (local or Firebase) ─────────────────────────────────────────────────
+function saveState() {
+  if (isSharedSession && !isSyncingFromRemote) {
+    sessionRef.set(state);
+  } else if (!isSharedSession) {
+    persistLocal();
+  }
+}
+
+// ─── Firebase Session ─────────────────────────────────────────────────────────
+function genId() {
+  return Math.random().toString(36).slice(2, 8);
+}
+
+function normalizeState(data) {
+  const toArr = v => Array.isArray(v) ? v : Object.values(v || {});
+  return { members: toArr(data.members), expenses: toArr(data.expenses) };
+}
+
+async function createSharedSession() {
+  const id = genId();
+  sessionId = id;
+  isSharedSession = true;
+  sessionRef = db.ref('sessions/' + id);
+  await sessionRef.set(state);
+  pushUrlParam(id);
+  startListening();
+  renderSessionCard();
+  toast('สร้าง Session แล้ว — คัดลอกลิงก์ได้เลย ✓');
+}
+
+function joinSession(id) {
+  sessionId = id;
+  isSharedSession = true;
+  sessionRef = db.ref('sessions/' + id);
+  startListening();
+  renderSessionCard();
+}
+
+function leaveSession() {
+  if (sessionRef) { sessionRef.off(); sessionRef = null; }
+  sessionId = null;
+  isSharedSession = false;
+  isSyncingFromRemote = false;
+  pushUrlParam(null);
+  loadLocalState();
+  renderAll();
+  renderSessionCard();
+  setSyncDot('off');
+  toast('ออกจาก Session แล้ว');
+}
+
+function startListening() {
+  sessionRef.on('value', snapshot => {
+    const data = snapshot.val();
+    if (!data) return;
+    isSyncingFromRemote = true;
+    state = normalizeState(data);
+    renderAll();
+    if (document.querySelector('.tab.active')?.dataset.tab === 'results') renderResults();
+    isSyncingFromRemote = false;
+    setSyncDot('on');
+  });
+  db.ref('.info/connected').on('value', snap => {
+    setSyncDot(snap.val() && isSharedSession ? 'on' : isSharedSession ? 'err' : 'off');
+  });
+}
+
+function getShareUrl() {
+  const url = new URL(location.href.split('?')[0]);
+  url.searchParams.set('s', sessionId);
+  return url.toString();
+}
+
+function copyShareLink() {
+  navigator.clipboard.writeText(getShareUrl())
+    .then(() => toast('คัดลอกลิงก์แล้ว ✓'))
+    .catch(() => toast('ไม่สามารถคัดลอกได้'));
+}
+
+function pushUrlParam(id) {
+  const url = new URL(location.href.split('?')[0]);
+  if (id) url.searchParams.set('s', id);
+  history.replaceState({}, '', url.toString());
+}
+
+// ─── Sync Indicator ───────────────────────────────────────────────────────────
+function setSyncDot(status) {
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  if (status === 'on') {
+    dot.style.background = 'var(--green)';
+    label.style.color = 'var(--accent2)';
+    label.textContent = sessionId;
+  } else if (status === 'err') {
+    dot.style.background = 'var(--red)';
+    label.style.color = 'var(--red)';
+    label.textContent = 'ขาดการเชื่อมต่อ';
+  } else {
+    dot.style.background = 'var(--muted)';
+    label.style.color = 'var(--muted)';
+    label.textContent = 'ส่วนตัว';
+  }
+}
+
+// ─── Session Card ─────────────────────────────────────────────────────────────
+function renderSessionCard() {
+  const card = document.getElementById('session-card');
+  if (!isSharedSession) {
+    card.innerHTML = `
+      <div class="card-title">แชร์กลุ่ม</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+        สร้าง Session แชร์ลิงก์ให้กลุ่ม<br>ทุกคนเพิ่มรายการพร้อมกันได้เลย
+      </p>
+      <button class="btn btn-primary" onclick="createSharedSession()">🔗 สร้าง Session แชร์กลุ่ม</button>
+    `;
+  } else {
+    card.innerHTML = `
+      <div class="card-title">Session แชร์กลุ่ม — กำลังเชื่อมต่อ</div>
+      <div class="session-id-box">${sessionId}</div>
+      <button class="btn btn-ghost btn-sm" onclick="copyShareLink()" style="width:100%;margin-bottom:8px">
+        📋 คัดลอกลิงก์ส่งให้เพื่อน
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="leaveSession()" style="width:100%;color:var(--red);border-color:rgba(248,113,113,.4)">
+        ✕ ออกจาก Session (กลับโหมดส่วนตัว)
+      </button>
+    `;
+    // Update title once connected
+    sessionRef.once('value', () => {
+      const title = card.querySelector('.card-title');
+      if (title) title.textContent = 'Session แชร์กลุ่ม — เชื่อมต่อแล้ว ✓';
+    });
+  }
+}
 
 // ─── Members ─────────────────────────────────────────────────────────────────
 function addMember() {
@@ -356,11 +493,8 @@ function removeMember(name) {
 function renderMembers() {
   const el = document.getElementById('member-chips');
   el.innerHTML = state.members.map(m => `
-    <div class="chip">${m}<button onclick="removeMember('${m}')" title="ลบ">×</button></div>
+    <div class="chip">${escHtml(m)}<button onclick="removeMember('${escAttr(m)}')" title="ลบ">×</button></div>
   `).join('');
-  document.getElementById('new-member').addEventListener('keydown', e => {
-    if (e.key === 'Enter') addMember();
-  });
 }
 
 // ─── Expense Modal ────────────────────────────────────────────────────────────
@@ -369,14 +503,9 @@ function openExpenseModal(id = null) {
   editingExpenseId = id;
   document.getElementById('modal-title').textContent = id ? 'แก้ไขรายการ' : 'เพิ่มรายการค่าใช้จ่าย';
 
-  // Populate payer
   const payer = document.getElementById('exp-payer');
-  payer.innerHTML = state.members.map(m => `<option value="${m}">${m}</option>`).join('');
-
-  // Participants checkboxes
+  payer.innerHTML = state.members.map(m => `<option value="${escAttr(m)}">${escHtml(m)}</option>`).join('');
   renderParticipantChecks(state.members);
-
-  // Reset weights toggle
   document.getElementById('weight-toggle').checked = false;
   document.getElementById('weight-section').style.display = 'none';
 
@@ -385,12 +514,9 @@ function openExpenseModal(id = null) {
     document.getElementById('exp-name').value = exp.name;
     document.getElementById('exp-amount').value = exp.amount;
     payer.value = exp.payer;
-    // Check participants
     document.querySelectorAll('.check-item').forEach(el => {
-      const n = el.dataset.name;
-      if (exp.participants.includes(n)) el.classList.add('selected');
+      if (exp.participants.includes(el.dataset.name)) el.classList.add('selected');
     });
-    // Weights
     if (exp.weights) {
       document.getElementById('weight-toggle').checked = true;
       document.getElementById('weight-section').style.display = 'block';
@@ -399,10 +525,8 @@ function openExpenseModal(id = null) {
   } else {
     document.getElementById('exp-name').value = '';
     document.getElementById('exp-amount').value = '';
-    // Select all by default
     document.querySelectorAll('.check-item').forEach(el => el.classList.add('selected'));
   }
-
   document.getElementById('expense-modal').classList.add('open');
 }
 
@@ -411,25 +535,21 @@ function closeExpenseModal() {
   editingExpenseId = null;
 }
 
-// Close modal on backdrop click
 document.getElementById('expense-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeExpenseModal();
 });
 
-function renderParticipantChecks(members, selected = null) {
-  const grid = document.getElementById('exp-participants');
-  grid.innerHTML = members.map(m => `
-    <div class="check-item${selected && selected.includes(m) ? ' selected' : ''}" data-name="${m}" onclick="toggleParticipant(this)">
-      <span>${m}</span>
+function renderParticipantChecks(members) {
+  document.getElementById('exp-participants').innerHTML = members.map(m => `
+    <div class="check-item" data-name="${escAttr(m)}" onclick="toggleParticipant(this)">
+      <span>${escHtml(m)}</span>
     </div>
   `).join('');
 }
 
 function toggleParticipant(el) {
   el.classList.toggle('selected');
-  if (document.getElementById('weight-toggle').checked) {
-    updateWeightInputs();
-  }
+  if (document.getElementById('weight-toggle').checked) updateWeightInputs();
 }
 
 function toggleWeights() {
@@ -453,8 +573,8 @@ function updateWeightInputs() {
 
 function renderWeightInputs(members, existing = {}) {
   document.getElementById('exp-weights').innerHTML = members.map(m => `
-    <div class="weight-item" data-name="${m}">
-      <span>${m}</span>
+    <div class="weight-item" data-name="${escAttr(m)}">
+      <span>${escHtml(m)}</span>
       <input type="number" min="0.1" step="0.1" value="${existing[m] || 1}" inputmode="decimal" style="width:60px">
     </div>
   `).join('');
@@ -503,60 +623,47 @@ function renderExpenses() {
     el.innerHTML = `<div class="empty"><span class="icon">🧾</span>ยังไม่มีรายการค่าใช้จ่าย<br>กดปุ่มด้านบนเพื่อเพิ่ม</div>`;
     return;
   }
-  el.innerHTML = state.expenses.map(exp => {
-    const perPerson = calcPerPerson(exp);
-    const participantStr = exp.participants.join(', ');
-    return `
-      <div class="expense-item">
-        <div class="expense-info">
-          <div class="expense-name">${exp.name}</div>
-          <div class="expense-meta">💳 ${exp.payer} • 👥 ${participantStr}</div>
-          ${exp.weights ? `<div class="expense-meta" style="color:#818cf8">⚖️ หารตามน้ำหนัก</div>` : ''}
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-          <div class="expense-amount">฿${fmt(exp.amount)}</div>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-ghost btn-sm" onclick="openExpenseModal('${exp.id}')">✏️</button>
-            <button class="btn btn-danger" onclick="deleteExpense('${exp.id}')">🗑</button>
-          </div>
+  el.innerHTML = state.expenses.map(exp => `
+    <div class="expense-item">
+      <div class="expense-info">
+        <div class="expense-name">${escHtml(exp.name)}</div>
+        <div class="expense-meta">💳 ${escHtml(exp.payer)} • 👥 ${exp.participants.map(escHtml).join(', ')}</div>
+        ${exp.weights ? `<div class="expense-meta" style="color:#818cf8">⚖️ หารตามน้ำหนัก</div>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <div class="expense-amount">฿${fmt(exp.amount)}</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="openExpenseModal('${exp.id}')">✏️</button>
+          <button class="btn btn-danger" onclick="deleteExpense('${exp.id}')">🗑</button>
         </div>
       </div>
-    `;
-  }).join('');
+    </div>
+  `).join('');
 }
 
 // ─── Calculation ──────────────────────────────────────────────────────────────
 function calcPerPerson(exp) {
   const result = {};
-  const participants = exp.participants;
   if (exp.weights) {
-    const totalW = participants.reduce((s, m) => s + (exp.weights[m] || 1), 0);
-    participants.forEach(m => {
-      result[m] = Math.ceil((exp.weights[m] || 1) / totalW * exp.amount);
-    });
+    const totalW = exp.participants.reduce((s, m) => s + (exp.weights[m] || 1), 0);
+    exp.participants.forEach(m => { result[m] = Math.ceil((exp.weights[m] || 1) / totalW * exp.amount); });
   } else {
-    const share = Math.ceil(exp.amount / participants.length);
-    participants.forEach(m => { result[m] = share; });
+    const share = Math.ceil(exp.amount / exp.participants.length);
+    exp.participants.forEach(m => { result[m] = share; });
   }
   return result;
 }
 
 function calcAll() {
-  const paid = {}; // total each person paid upfront
-  const owed = {}; // total each person actually owes
+  const paid = {}, owed = {};
   state.members.forEach(m => { paid[m] = 0; owed[m] = 0; });
-
   state.expenses.forEach(exp => {
     paid[exp.payer] = (paid[exp.payer] || 0) + exp.amount;
     const shares = calcPerPerson(exp);
-    exp.participants.forEach(m => {
-      owed[m] = (owed[m] || 0) + shares[m];
-    });
+    exp.participants.forEach(m => { owed[m] = (owed[m] || 0) + shares[m]; });
   });
-
   const net = {};
   state.members.forEach(m => { net[m] = (paid[m] || 0) - (owed[m] || 0); });
-
   return { paid, owed, net };
 }
 
@@ -568,7 +675,6 @@ function minTransfers(net) {
   });
   creditors.sort((a, b) => b.amount - a.amount);
   debtors.sort((a, b) => b.amount - a.amount);
-
   const transfers = [];
   let i = 0, j = 0;
   while (i < debtors.length && j < creditors.length) {
@@ -589,29 +695,20 @@ function renderResults() {
     el.innerHTML = `<div class="empty"><span class="icon">📊</span>ยังไม่มีข้อมูลค่าใช้จ่าย<br>ไปที่แท็บ "ค่าใช้จ่าย" เพื่อเพิ่มรายการ</div>`;
     return;
   }
-
   const { paid, owed, net } = calcAll();
   const transfers = minTransfers(net);
-
   let html = '';
 
-  // Section 1 — Per expense
   html += `<div class="section-title">ส่วนที่ 1 — สรุปต่อรายการ</div>`;
   html += `<div class="card" style="overflow-x:auto"><table class="result-table">
-    <thead><tr><th>รายการ</th><th class="text-right">ราคา</th><th>ออก</th><th>คนร่วม / ต่อหัว</th></tr></thead><tbody>`;
+    <thead><tr><th>รายการ</th><th class="text-right">ราคา</th><th>ออก</th><th>ต่อหัว</th></tr></thead><tbody>`;
   state.expenses.forEach(exp => {
     const shares = calcPerPerson(exp);
-    const shareStr = exp.participants.map(m => `${m}: ฿${fmt(shares[m])}`).join('<br>');
-    html += `<tr>
-      <td><b>${exp.name}</b></td>
-      <td class="text-right">฿${fmt(exp.amount)}</td>
-      <td>${exp.payer}</td>
-      <td style="font-size:12px">${shareStr}</td>
-    </tr>`;
+    const shareStr = exp.participants.map(m => `${escHtml(m)}: ฿${fmt(shares[m])}`).join('<br>');
+    html += `<tr><td><b>${escHtml(exp.name)}</b></td><td class="text-right">฿${fmt(exp.amount)}</td><td>${escHtml(exp.payer)}</td><td style="font-size:12px">${shareStr}</td></tr>`;
   });
   html += `</tbody></table></div>`;
 
-  // Section 2 — Per person
   html += `<div class="section-title">ส่วนที่ 2 — สรุปต่อคน</div>`;
   html += `<div class="card" style="overflow-x:auto"><table class="result-table">
     <thead><tr><th>ชื่อ</th><th class="text-right">ออกก่อน</th><th class="text-right">ต้องจ่าย</th><th>ยอดสุทธิ</th></tr></thead><tbody>`;
@@ -621,16 +718,10 @@ function renderResults() {
     if (n > 0.5) { badge = 'badge-green'; statusText = `รับคืน ฿${fmt(n)}`; }
     else if (n < -0.5) { badge = 'badge-red'; statusText = `ต้องจ่าย ฿${fmt(-n)}`; }
     else { badge = 'badge-neutral'; statusText = 'เสมอ'; }
-    html += `<tr>
-      <td><b>${m}</b></td>
-      <td class="text-right">฿${fmt(paid[m])}</td>
-      <td class="text-right">฿${fmt(owed[m])}</td>
-      <td><span class="badge ${badge}">${statusText}</span></td>
-    </tr>`;
+    html += `<tr><td><b>${escHtml(m)}</b></td><td class="text-right">฿${fmt(paid[m])}</td><td class="text-right">฿${fmt(owed[m])}</td><td><span class="badge ${badge}">${statusText}</span></td></tr>`;
   });
   html += `</tbody></table></div>`;
 
-  // Section 3 — Transfers
   html += `<div class="section-title">ส่วนที่ 3 — รายการโอนเงิน</div>`;
   if (transfers.length === 0) {
     html += `<div class="card"><p style="color:var(--green);text-align:center;font-weight:600">✅ ทุกคนจ่ายเท่ากัน ไม่ต้องโอน!</p></div>`;
@@ -639,57 +730,47 @@ function renderResults() {
     transfers.sort((a, b) => b.amount - a.amount).forEach(t => {
       html += `<div class="transfer-item">
         <div class="transfer-names">
-          <span style="color:var(--red)">${t.from}</span>
+          <span style="color:var(--red)">${escHtml(t.from)}</span>
           <span class="arrow">→</span>
-          <span style="color:var(--green)">${t.to}</span>
+          <span style="color:var(--green)">${escHtml(t.to)}</span>
         </div>
         <div class="transfer-amount">฿${fmt(t.amount)}</div>
       </div>`;
     });
   }
-
   el.innerHTML = html;
 }
 
-// ─── Session ──────────────────────────────────────────────────────────────────
+// ─── Session Management ───────────────────────────────────────────────────────
 function newSession() {
-  if (!confirm('เริ่มเซสชันใหม่? ข้อมูลปัจจุบันจะถูกลบ')) return;
+  if (!confirm('ล้างข้อมูลทั้งหมด? การกระทำนี้ไม่สามารถย้อนกลับได้')) return;
+  if (isSharedSession) leaveSession();
   state = { members: [], expenses: [] };
-  saveState();
+  persistLocal();
   renderAll();
-  toast('เริ่มเซสชันใหม่แล้ว');
+  toast('ล้างข้อมูลแล้ว');
 }
 
 function exportSession() {
   if (state.expenses.length === 0) { toast('ยังไม่มีข้อมูล'); return; }
   const { paid, owed, net } = calcAll();
   const transfers = minTransfers(net);
-
-  let text = '💸 PayPerUsed — สรุปค่าใช้จ่าย\n';
-  text += '─'.repeat(30) + '\n';
-  text += `📋 รายการทั้งหมด ${state.expenses.length} รายการ\n\n`;
-
-  text += '👤 สรุปต่อคน\n';
+  let text = '💸 PayPerUsed — สรุปค่าใช้จ่าย\n' + '─'.repeat(30) + '\n';
+  text += `📋 รายการทั้งหมด ${state.expenses.length} รายการ\n\n👤 สรุปต่อคน\n`;
   state.members.forEach(m => {
     const n = net[m];
-    const status = n > 0.5 ? `รับคืน ฿${fmt(n)}` : n < -0.5 ? `ต้องจ่าย ฿${fmt(-n)}` : 'เสมอ';
-    text += `  ${m}: ${status}\n`;
+    text += `  ${m}: ${n > 0.5 ? `รับคืน ฿${fmt(n)}` : n < -0.5 ? `ต้องจ่าย ฿${fmt(-n)}` : 'เสมอ'}\n`;
   });
-
   text += '\n💸 รายการโอน\n';
-  if (transfers.length === 0) {
-    text += '  ไม่ต้องโอน ทุกคนจ่ายเท่ากัน\n';
-  } else {
-    transfers.forEach(t => { text += `  ${t.from} → ${t.to}: ฿${fmt(t.amount)}\n`; });
-  }
-
+  if (transfers.length === 0) { text += '  ไม่ต้องโอน\n'; }
+  else transfers.forEach(t => { text += `  ${t.from} → ${t.to}: ฿${fmt(t.amount)}\n`; });
   navigator.clipboard.writeText(text).then(() => toast('คัดลอกแล้ว ✓')).catch(() => toast('ไม่สามารถคัดลอกได้'));
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function fmt(n) {
-  return Math.round(n).toLocaleString('th-TH');
-}
+function fmt(n) { return Math.round(n).toLocaleString('th-TH'); }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return String(s).replace(/'/g,'&#39;').replace(/"/g,'&quot;'); }
 
 function renderAll() {
   renderMembers();
@@ -697,14 +778,18 @@ function renderAll() {
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-loadState();
-renderAll();
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+const urlSession = new URLSearchParams(location.search).get('s');
+if (urlSession) {
+  joinSession(urlSession);
+} else {
+  loadLocalState();
+  renderAll();
+  renderSessionCard();
+  setSyncDot('off');
 }
 
-// Enter key on member input
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
 document.getElementById('new-member').addEventListener('keydown', e => {
   if (e.key === 'Enter') addMember();
 });
