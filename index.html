@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#6366f1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>PayPerUsed</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #334155;
+    --border: #475569;
+    --accent: #6366f1;
+    --accent2: #818cf8;
+    --green: #22c55e;
+    --red: #f87171;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --radius: 12px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; }
+
+  body { display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; }
+
+  /* Header */
+  header {
+    padding: 16px 16px 12px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header h1 { font-size: 20px; font-weight: 700; color: var(--accent2); }
+  header span { font-size: 12px; color: var(--muted); }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    flex: 1; padding: 12px 4px; text-align: center; font-size: 13px; font-weight: 500;
+    color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
+    transition: color .2s, border-color .2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab.active { color: var(--accent2); border-bottom-color: var(--accent); }
+
+  /* Main content */
+  main { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: calc(16px + var(--safe-bottom)); }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px; margin-bottom: 12px;
+  }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
+
+  /* Form elements */
+  input, select {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 15px;
+    outline: none; transition: border-color .2s;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--muted); }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; margin-top: 10px; }
+  label:first-child { margin-top: 0; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 11px 18px; border-radius: 8px; font-size: 15px; font-weight: 600;
+    border: none; cursor: pointer; transition: opacity .15s, transform .1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active { transform: scale(.97); opacity: .85; }
+  .btn-primary { background: var(--accent); color: #fff; width: 100%; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-danger { background: transparent; border: none; color: var(--red); padding: 6px; font-size: 18px; }
+  .btn-sm { padding: 7px 12px; font-size: 13px; }
+
+  /* Member chips */
+  .member-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .chip {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 10px 5px 12px; font-size: 14px;
+  }
+  .chip button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 2px; }
+  .chip button:hover { color: var(--red); }
+
+  .add-row { display: flex; gap: 8px; }
+  .add-row input { flex: 1; }
+
+  /* Expense list */
+  .expense-item {
+    background: var(--surface2); border-radius: 10px; padding: 12px;
+    margin-bottom: 8px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+  }
+  .expense-info { flex: 1; min-width: 0; }
+  .expense-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .expense-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .expense-amount { font-weight: 700; font-size: 16px; color: var(--accent2); white-space: nowrap; }
+
+  /* Checkbox grid */
+  .check-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .check-item {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 10px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color .15s;
+  }
+  .check-item.selected { border-color: var(--accent); background: rgba(99,102,241,.15); }
+  .check-item input[type=checkbox] { display: none; }
+  .check-item span { font-size: 14px; }
+
+  /* Weight inputs */
+  .weight-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .weight-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .weight-item span { font-size: 12px; color: var(--muted); }
+  .weight-item input { width: 60px; text-align: center; padding: 7px 8px; }
+
+  /* Section divider */
+  .section-title {
+    font-size: 14px; font-weight: 700; color: var(--accent2);
+    margin: 20px 0 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* Result tables */
+  .result-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .result-table th { color: var(--muted); font-weight: 600; text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .result-table td { padding: 8px 8px; border-bottom: 1px solid rgba(71,85,105,.4); vertical-align: top; }
+  .result-table tr:last-child td { border-bottom: none; }
+  .text-right { text-align: right !important; }
+  .text-green { color: var(--green); font-weight: 600; }
+  .text-red { color: var(--red); font-weight: 600; }
+  .text-muted { color: var(--muted); }
+
+  /* Transfer list */
+  .transfer-item {
+    background: var(--surface2); border-radius: 10px; padding: 12px 14px;
+    margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .transfer-names { font-size: 15px; }
+  .transfer-names .arrow { color: var(--muted); margin: 0 6px; }
+  .transfer-amount { font-size: 17px; font-weight: 700; color: var(--accent2); }
+
+  /* Empty state */
+  .empty { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 14px; line-height: 1.8; }
+  .empty .icon { font-size: 40px; display: block; margin-bottom: 8px; }
+
+  /* Badge */
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  }
+  .badge-green { background: rgba(34,197,94,.15); color: var(--green); }
+  .badge-red { background: rgba(248,113,113,.15); color: var(--red); }
+  .badge-neutral { background: var(--surface2); color: var(--muted); }
+
+  /* Toggle weight */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .toggle-label { font-size: 13px; color: var(--muted); }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; inset: 0; background: var(--surface2); border-radius: 24px;
+    cursor: pointer; transition: background .2s;
+    border: 1px solid var(--border);
+  }
+  .slider::before {
+    content: ''; position: absolute; width: 18px; height: 18px;
+    left: 2px; top: 2px; background: var(--muted); border-radius: 50%; transition: transform .2s, background .2s;
+  }
+  .toggle input:checked + .slider { background: rgba(99,102,241,.3); border-color: var(--accent); }
+  .toggle input:checked + .slider::before { transform: translateX(20px); background: var(--accent2); }
+
+  .toast {
+    position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 20px; border-radius: 20px; font-size: 14px;
+    opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; z-index: 100;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  select option { background: var(--surface2); }
+  .form-modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 50;
+    display: flex; align-items: flex-end; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .25s;
+  }
+  .form-modal-backdrop.open { opacity: 1; pointer-events: all; }
+  .form-modal {
+    background: var(--surface); border-radius: 20px 20px 0 0; width: 100%; max-width: 480px;
+    padding: 20px 16px; padding-bottom: calc(20px + var(--safe-bottom));
+    max-height: 90vh; overflow-y: auto;
+    transform: translateY(100%); transition: transform .3s cubic-bezier(.32,0,.67,0);
+  }
+  .form-modal-backdrop.open .form-modal { transform: translateY(0); }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 4px; margin: 0 auto 16px; }
+  .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💸 PayPerUsed</h1>
+  <span id="session-label">เซสชันปัจจุบัน</span>
+</header>
+
+<nav class="tabs">
+  <div class="tab active" data-tab="members">👥 สมาชิก</div>
+  <div class="tab" data-tab="expenses">🧾 ค่าใช้จ่าย</div>
+  <div class="tab" data-tab="results">📊 สรุป</div>
+</nav>
+
+<main>
+  <!-- Members Page -->
+  <div class="page active" id="page-members">
+    <div class="card">
+      <div class="card-title">รายชื่อสมาชิก</div>
+      <div class="member-list" id="member-chips"></div>
+      <div class="add-row">
+        <input type="text" id="new-member" placeholder="ชื่อสมาชิก" maxlength="20" autocomplete="off">
+        <button class="btn btn-primary btn-sm" onclick="addMember()" style="width:auto;white-space:nowrap">+ เพิ่ม</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:8px">
+      <div class="card-title">จัดการเซสชัน</div>
+      <button class="btn btn-ghost btn-sm" onclick="newSession()" style="width:100%;margin-bottom:8px">🔄 เริ่มเซสชันใหม่</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportSession()" style="width:100%">📋 คัดลอกสรุปข้อความ</button>
+    </div>
+  </div>
+
+  <!-- Expenses Page -->
+  <div class="page" id="page-expenses">
+    <button class="btn btn-primary" onclick="openExpenseModal()" style="margin-bottom:16px">+ เพิ่มรายการค่าใช้จ่าย</button>
+    <div id="expense-list"></div>
+  </div>
+
+  <!-- Results Page -->
+  <div class="page" id="page-results">
+    <div id="results-content"></div>
+  </div>
+</main>
+
+<!-- Add Expense Modal -->
+<div class="form-modal-backdrop" id="expense-modal">
+  <div class="form-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">เพิ่มรายการค่าใช้จ่าย</div>
+
+    <label>ชื่อรายการ</label>
+    <input type="text" id="exp-name" placeholder="เช่น อาหารเย็น, น้ำมัน" autocomplete="off">
+
+    <label>ราคารวม (บาท)</label>
+    <input type="number" id="exp-amount" placeholder="0" min="0" inputmode="decimal">
+
+    <label>ใครออกเงินก่อน</label>
+    <select id="exp-payer"></select>
+
+    <label>ใครร่วมหารบ้าง</label>
+    <div class="check-grid" id="exp-participants"></div>
+
+    <div class="toggle-row">
+      <span class="toggle-label">หารไม่เท่ากัน (ตั้งน้ำหนัก)</span>
+      <label class="toggle">
+        <input type="checkbox" id="weight-toggle" onchange="toggleWeights()">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div id="weight-section" style="display:none">
+      <label style="margin-top:10px">น้ำหนักการหาร</label>
+      <div class="weight-grid" id="exp-weights"></div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeExpenseModal()" style="flex:1">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveExpense()" style="flex:2">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+let state = { members: [], expenses: [] };
+let editingExpenseId = null;
+
+function loadState() {
+  const s = localStorage.getItem('payperused');
+  if (s) state = JSON.parse(s);
+}
+function saveState() {
+  localStorage.setItem('payperused', JSON.stringify(state));
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('page-' + t.dataset.tab).classList.add('active');
+    if (t.dataset.tab === 'results') renderResults();
+  });
+});
+
+// ─── Members ─────────────────────────────────────────────────────────────────
+function addMember() {
+  const input = document.getElementById('new-member');
+  const name = input.value.trim();
+  if (!name) return;
+  if (state.members.includes(name)) { toast('มีชื่อนี้แล้ว'); return; }
+  state.members.push(name);
+  saveState();
+  input.value = '';
+  renderMembers();
+}
+
+function removeMember(name) {
+  const used = state.expenses.some(e => e.payer === name || e.participants.includes(name));
+  if (used) { toast(`${name} มีรายการค่าใช้จ่าย ลบไม่ได้`); return; }
+  state.members = state.members.filter(m => m !== name);
+  saveState();
+  renderMembers();
+}
+
+function renderMembers() {
+  const el = document.getElementById('member-chips');
+  el.innerHTML = state.members.map(m => `
+    <div class="chip">${m}<button onclick="removeMember('${m}')" title="ลบ">×</button></div>
+  `).join('');
+  document.getElementById('new-member').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addMember();
+  });
+}
+
+// ─── Expense Modal ────────────────────────────────────────────────────────────
+function openExpenseModal(id = null) {
+  if (state.members.length < 2) { toast('เพิ่มสมาชิกอย่างน้อย 2 คนก่อน'); return; }
+  editingExpenseId = id;
+  document.getElementById('modal-title').textContent = id ? 'แก้ไขรายการ' : 'เพิ่มรายการค่าใช้จ่าย';
+
+  // Populate payer
+  const payer = document.getElementById('exp-payer');
+  payer.innerHTML = state.members.map(m => `<option value="${m}">${m}</option>`).join('');
+
+  // Participants checkboxes
+  renderParticipantChecks(state.members);
+
+  // Reset weights toggle
+  document.getElementById('weight-toggle').checked = false;
+  document.getElementById('weight-section').style.display = 'none';
+
+  if (id) {
+    const exp = state.expenses.find(e => e.id === id);
+    document.getElementById('exp-name').value = exp.name;
+    document.getElementById('exp-amount').value = exp.amount;
+    payer.value = exp.payer;
+    // Check participants
+    document.querySelectorAll('.check-item').forEach(el => {
+      const n = el.dataset.name;
+      if (exp.participants.includes(n)) el.classList.add('selected');
+    });
+    // Weights
+    if (exp.weights) {
+      document.getElementById('weight-toggle').checked = true;
+      document.getElementById('weight-section').style.display = 'block';
+      renderWeightInputs(exp.participants, exp.weights);
+    }
+  } else {
+    document.getElementById('exp-name').value = '';
+    document.getElementById('exp-amount').value = '';
+    // Select all by default
+    document.querySelectorAll('.check-item').forEach(el => el.classList.add('selected'));
+  }
+
+  document.getElementById('expense-modal').classList.add('open');
+}
+
+function closeExpenseModal() {
+  document.getElementById('expense-modal').classList.remove('open');
+  editingExpenseId = null;
+}
+
+// Close modal on backdrop click
+document.getElementById('expense-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeExpenseModal();
+});
+
+function renderParticipantChecks(members, selected = null) {
+  const grid = document.getElementById('exp-participants');
+  grid.innerHTML = members.map(m => `
+    <div class="check-item${selected && selected.includes(m) ? ' selected' : ''}" data-name="${m}" onclick="toggleParticipant(this)">
+      <span>${m}</span>
+    </div>
+  `).join('');
+}
+
+function toggleParticipant(el) {
+  el.classList.toggle('selected');
+  if (document.getElementById('weight-toggle').checked) {
+    updateWeightInputs();
+  }
+}
+
+function toggleWeights() {
+  const on = document.getElementById('weight-toggle').checked;
+  document.getElementById('weight-section').style.display = on ? 'block' : 'none';
+  if (on) updateWeightInputs();
+}
+
+function getSelectedParticipants() {
+  return Array.from(document.querySelectorAll('.check-item.selected')).map(e => e.dataset.name);
+}
+
+function updateWeightInputs() {
+  const selected = getSelectedParticipants();
+  const existing = {};
+  document.querySelectorAll('.weight-item').forEach(el => {
+    existing[el.dataset.name] = el.querySelector('input').value;
+  });
+  renderWeightInputs(selected, existing);
+}
+
+function renderWeightInputs(members, existing = {}) {
+  document.getElementById('exp-weights').innerHTML = members.map(m => `
+    <div class="weight-item" data-name="${m}">
+      <span>${m}</span>
+      <input type="number" min="0.1" step="0.1" value="${existing[m] || 1}" inputmode="decimal" style="width:60px">
+    </div>
+  `).join('');
+}
+
+function saveExpense() {
+  const name = document.getElementById('exp-name').value.trim();
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  const payer = document.getElementById('exp-payer').value;
+  const participants = getSelectedParticipants();
+
+  if (!name) { toast('ระบุชื่อรายการด้วย'); return; }
+  if (!amount || amount <= 0) { toast('ระบุราคาด้วย'); return; }
+  if (participants.length === 0) { toast('เลือกคนร่วมหารอย่างน้อย 1 คน'); return; }
+
+  let weights = null;
+  if (document.getElementById('weight-toggle').checked) {
+    weights = {};
+    document.querySelectorAll('.weight-item').forEach(el => {
+      weights[el.dataset.name] = parseFloat(el.querySelector('input').value) || 1;
+    });
+  }
+
+  if (editingExpenseId) {
+    const idx = state.expenses.findIndex(e => e.id === editingExpenseId);
+    state.expenses[idx] = { id: editingExpenseId, name, amount, payer, participants, weights };
+  } else {
+    state.expenses.push({ id: Date.now().toString(), name, amount, payer, participants, weights });
+  }
+
+  saveState();
+  renderExpenses();
+  closeExpenseModal();
+  toast('บันทึกแล้ว ✓');
+}
+
+function deleteExpense(id) {
+  state.expenses = state.expenses.filter(e => e.id !== id);
+  saveState();
+  renderExpenses();
+}
+
+function renderExpenses() {
+  const el = document.getElementById('expense-list');
+  if (state.expenses.length === 0) {
+    el.innerHTML = `<div class="empty"><span class="icon">🧾</span>ยังไม่มีรายการค่าใช้จ่าย<br>กดปุ่มด้านบนเพื่อเพิ่ม</div>`;
+    return;
+  }
+  el.innerHTML = state.expenses.map(exp => {
+    const perPerson = calcPerPerson(exp);
+    const participantStr = exp.participants.join(', ');
+    return `
+      <div class="expense-item">
+        <div class="expense-info">
+          <div class="expense-name">${exp.name}</div>
+          <div class="expense-meta">💳 ${exp.payer} • 👥 ${participantStr}</div>
+          ${exp.weights ? `<div class="expense-meta" style="color:#818cf8">⚖️ หารตามน้ำหนัก</div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <div class="expense-amount">฿${fmt(exp.amount)}</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="openExpenseModal('${exp.id}')">✏️</button>
+            <button class="btn btn-danger" onclick="deleteExpense('${exp.id}')">🗑</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ─── Calculation ──────────────────────────────────────────────────────────────
+function calcPerPerson(exp) {
+  const result = {};
+  const participants = exp.participants;
+  if (exp.weights) {
+    const totalW = participants.reduce((s, m) => s + (exp.weights[m] || 1), 0);
+    participants.forEach(m => {
+      result[m] = Math.ceil((exp.weights[m] || 1) / totalW * exp.amount);
+    });
+  } else {
+    const share = Math.ceil(exp.amount / participants.length);
+    participants.forEach(m => { result[m] = share; });
+  }
+  return result;
+}
+
+function calcAll() {
+  const paid = {}; // total each person paid upfront
+  const owed = {}; // total each person actually owes
+  state.members.forEach(m => { paid[m] = 0; owed[m] = 0; });
+
+  state.expenses.forEach(exp => {
+    paid[exp.payer] = (paid[exp.payer] || 0) + exp.amount;
+    const shares = calcPerPerson(exp);
+    exp.participants.forEach(m => {
+      owed[m] = (owed[m] || 0) + shares[m];
+    });
+  });
+
+  const net = {};
+  state.members.forEach(m => { net[m] = (paid[m] || 0) - (owed[m] || 0); });
+
+  return { paid, owed, net };
+}
+
+function minTransfers(net) {
+  const creditors = [], debtors = [];
+  Object.entries(net).forEach(([name, val]) => {
+    if (val > 0.5) creditors.push({ name, amount: val });
+    else if (val < -0.5) debtors.push({ name, amount: -val });
+  });
+  creditors.sort((a, b) => b.amount - a.amount);
+  debtors.sort((a, b) => b.amount - a.amount);
+
+  const transfers = [];
+  let i = 0, j = 0;
+  while (i < debtors.length && j < creditors.length) {
+    const pay = Math.min(debtors[i].amount, creditors[j].amount);
+    transfers.push({ from: debtors[i].name, to: creditors[j].name, amount: Math.round(pay) });
+    debtors[i].amount -= pay;
+    creditors[j].amount -= pay;
+    if (debtors[i].amount < 0.5) i++;
+    if (creditors[j].amount < 0.5) j++;
+  }
+  return transfers;
+}
+
+// ─── Results ─────────────────────────────────────────────────────────────────
+function renderResults() {
+  const el = document.getElementById('results-content');
+  if (state.expenses.length === 0) {
+    el.innerHTML = `<div class="empty"><span class="icon">📊</span>ยังไม่มีข้อมูลค่าใช้จ่าย<br>ไปที่แท็บ "ค่าใช้จ่าย" เพื่อเพิ่มรายการ</div>`;
+    return;
+  }
+
+  const { paid, owed, net } = calcAll();
+  const transfers = minTransfers(net);
+
+  let html = '';
+
+  // Section 1 — Per expense
+  html += `<div class="section-title">ส่วนที่ 1 — สรุปต่อรายการ</div>`;
+  html += `<div class="card" style="overflow-x:auto"><table class="result-table">
+    <thead><tr><th>รายการ</th><th class="text-right">ราคา</th><th>ออก</th><th>คนร่วม / ต่อหัว</th></tr></thead><tbody>`;
+  state.expenses.forEach(exp => {
+    const shares = calcPerPerson(exp);
+    const shareStr = exp.participants.map(m => `${m}: ฿${fmt(shares[m])}`).join('<br>');
+    html += `<tr>
+      <td><b>${exp.name}</b></td>
+      <td class="text-right">฿${fmt(exp.amount)}</td>
+      <td>${exp.payer}</td>
+      <td style="font-size:12px">${shareStr}</td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+
+  // Section 2 — Per person
+  html += `<div class="section-title">ส่วนที่ 2 — สรุปต่อคน</div>`;
+  html += `<div class="card" style="overflow-x:auto"><table class="result-table">
+    <thead><tr><th>ชื่อ</th><th class="text-right">ออกก่อน</th><th class="text-right">ต้องจ่าย</th><th>ยอดสุทธิ</th></tr></thead><tbody>`;
+  state.members.forEach(m => {
+    const n = net[m];
+    let badge, statusText;
+    if (n > 0.5) { badge = 'badge-green'; statusText = `รับคืน ฿${fmt(n)}`; }
+    else if (n < -0.5) { badge = 'badge-red'; statusText = `ต้องจ่าย ฿${fmt(-n)}`; }
+    else { badge = 'badge-neutral'; statusText = 'เสมอ'; }
+    html += `<tr>
+      <td><b>${m}</b></td>
+      <td class="text-right">฿${fmt(paid[m])}</td>
+      <td class="text-right">฿${fmt(owed[m])}</td>
+      <td><span class="badge ${badge}">${statusText}</span></td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+
+  // Section 3 — Transfers
+  html += `<div class="section-title">ส่วนที่ 3 — รายการโอนเงิน</div>`;
+  if (transfers.length === 0) {
+    html += `<div class="card"><p style="color:var(--green);text-align:center;font-weight:600">✅ ทุกคนจ่ายเท่ากัน ไม่ต้องโอน!</p></div>`;
+  } else {
+    html += `<p style="font-size:13px;color:var(--muted);margin-bottom:8px">ทั้งหมด ${transfers.length} ธุรกรรม</p>`;
+    transfers.sort((a, b) => b.amount - a.amount).forEach(t => {
+      html += `<div class="transfer-item">
+        <div class="transfer-names">
+          <span style="color:var(--red)">${t.from}</span>
+          <span class="arrow">→</span>
+          <span style="color:var(--green)">${t.to}</span>
+        </div>
+        <div class="transfer-amount">฿${fmt(t.amount)}</div>
+      </div>`;
+    });
+  }
+
+  el.innerHTML = html;
+}
+
+// ─── Session ──────────────────────────────────────────────────────────────────
+function newSession() {
+  if (!confirm('เริ่มเซสชันใหม่? ข้อมูลปัจจุบันจะถูกลบ')) return;
+  state = { members: [], expenses: [] };
+  saveState();
+  renderAll();
+  toast('เริ่มเซสชันใหม่แล้ว');
+}
+
+function exportSession() {
+  if (state.expenses.length === 0) { toast('ยังไม่มีข้อมูล'); return; }
+  const { paid, owed, net } = calcAll();
+  const transfers = minTransfers(net);
+
+  let text = '💸 PayPerUsed — สรุปค่าใช้จ่าย\n';
+  text += '─'.repeat(30) + '\n';
+  text += `📋 รายการทั้งหมด ${state.expenses.length} รายการ\n\n`;
+
+  text += '👤 สรุปต่อคน\n';
+  state.members.forEach(m => {
+    const n = net[m];
+    const status = n > 0.5 ? `รับคืน ฿${fmt(n)}` : n < -0.5 ? `ต้องจ่าย ฿${fmt(-n)}` : 'เสมอ';
+    text += `  ${m}: ${status}\n`;
+  });
+
+  text += '\n💸 รายการโอน\n';
+  if (transfers.length === 0) {
+    text += '  ไม่ต้องโอน ทุกคนจ่ายเท่ากัน\n';
+  } else {
+    transfers.forEach(t => { text += `  ${t.from} → ${t.to}: ฿${fmt(t.amount)}\n`; });
+  }
+
+  navigator.clipboard.writeText(text).then(() => toast('คัดลอกแล้ว ✓')).catch(() => toast('ไม่สามารถคัดลอกได้'));
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function fmt(n) {
+  return Math.round(n).toLocaleString('th-TH');
+}
+
+function renderAll() {
+  renderMembers();
+  renderExpenses();
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+loadState();
+renderAll();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+
+// Enter key on member input
+document.getElementById('new-member').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addMember();
+});
+</script>
+</body>
+</html>
