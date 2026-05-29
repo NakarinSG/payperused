@@ -131,6 +131,24 @@
     cursor: pointer; -webkit-tap-highlight-color: transparent;
     display: flex; align-items: center; gap: 4px;
   }
+  .transfer-item.settled { opacity: .5; }
+  .transfer-item.settled .transfer-amount { text-decoration: line-through; }
+  .settle-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 8px; padding: 6px 9px; font-size: 13px; font-weight: 600;
+    cursor: pointer; -webkit-tap-highlight-color: transparent; white-space: nowrap;
+  }
+  .settle-btn.done { background: rgba(34,197,94,.18); border-color: rgba(34,197,94,.4); color: var(--green); }
+
+  .summary-card { display: flex; gap: 10px; }
+  .summary-box {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px; text-align: center;
+  }
+  .summary-box .s-val { font-size: 20px; font-weight: 800; color: var(--accent2); }
+  .summary-box .s-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .results-trip-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .settle-progress { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
 
   .empty { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 14px; line-height: 1.8; }
   .empty .icon { font-size: 40px; display: block; margin-bottom: 8px; }
@@ -232,6 +250,10 @@
 <main>
   <div class="page active" id="page-members">
     <div class="card">
+      <div class="card-title">ชื่อทริป / กลุ่ม</div>
+      <input type="text" id="trip-name" placeholder="เช่น เที่ยวเชียงใหม่ 2569" maxlength="40" autocomplete="off" oninput="onTripNameInput()">
+    </div>
+    <div class="card">
       <div class="card-title">รายชื่อสมาชิก</div>
       <div class="member-list" id="member-chips"></div>
       <div class="add-row">
@@ -328,8 +350,10 @@ firebase.initializeApp({
 const db = firebase.database();
 
 // ─── State ────────────────────────────────────────────────────────────────────
-let state = { members: [], expenses: [], qrcodes: {} };
+let state = { members: [], expenses: [], qrcodes: {}, settled: {}, tripName: '' };
 let editingExpenseId = null;
+
+const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 วัน
 
 // ─── Session ──────────────────────────────────────────────────────────────────
 let sessionId = null, isSharedSession = false;
@@ -358,8 +382,10 @@ document.querySelectorAll('.tab').forEach(t => {
 // ─── Storage ──────────────────────────────────────────────────────────────────
 function loadLocalState() {
   const s = localStorage.getItem('payperused');
-  state = s ? JSON.parse(s) : { members: [], expenses: [], qrcodes: {} };
+  state = s ? JSON.parse(s) : { members: [], expenses: [], qrcodes: {}, settled: {}, tripName: '' };
   if (!state.qrcodes) state.qrcodes = {};
+  if (!state.settled) state.settled = {};
+  if (state.tripName == null) state.tripName = '';
 }
 
 function persistLocal() {
@@ -369,6 +395,7 @@ function persistLocal() {
 function saveState() {
   if (isSharedSession && !isSyncingFromRemote) {
     sessionRef.set(state);
+    touchSessionMeta();
   } else if (!isSharedSession) {
     persistLocal();
   }
@@ -379,8 +406,31 @@ function normalizeState(data) {
   return {
     members: toArr(data.members),
     expenses: toArr(data.expenses),
-    qrcodes: data.qrcodes || {}
+    qrcodes: data.qrcodes || {},
+    settled: data.settled || {},
+    tripName: data.tripName || ''
   };
+}
+
+// ─── Session TTL / Cleanup ────────────────────────────────────────────────────
+function touchSessionMeta() {
+  if (sessionId) db.ref('sessionMeta/' + sessionId).update({ updatedAt: Date.now() });
+}
+
+// กวาดลบ session ที่ไม่มีความเคลื่อนไหวเกิน 7 วัน (รันตอนเปิดแอป อย่างมากทุก 6 ชม.)
+function cleanupOldSessions() {
+  const last = +(localStorage.getItem('ppu_last_cleanup') || 0);
+  if (Date.now() - last < 6 * 60 * 60 * 1000) return;
+  localStorage.setItem('ppu_last_cleanup', String(Date.now()));
+  const cutoff = Date.now() - SESSION_TTL_MS;
+  db.ref('sessionMeta').orderByChild('updatedAt').endAt(cutoff).once('value', snap => {
+    const updates = {};
+    snap.forEach(child => {
+      updates['sessions/' + child.key] = null;
+      updates['sessionMeta/' + child.key] = null;
+    });
+    if (Object.keys(updates).length) db.ref().update(updates);
+  }).catch(() => {});
 }
 
 // ─── Identity ────────────────────────────────────────────────────────────────
@@ -526,6 +576,7 @@ async function createSharedSession() {
   isSharedSession = true;
   sessionRef = db.ref('sessions/' + id);
   await sessionRef.set(state);
+  await db.ref('sessionMeta/' + id).set({ createdAt: Date.now(), updatedAt: Date.now() });
   pushUrlParam(id);
   startListening();
   renderSessionCard();
@@ -809,6 +860,16 @@ function renderResults() {
   const transfers = minTransfers(net);
   let html = '';
 
+  if (state.tripName) html += `<div class="results-trip-name">📍 ${escHtml(state.tripName)}</div>`;
+
+  const totalSpent = state.expenses.reduce((s, e) => s + e.amount, 0);
+  const avgPerHead = state.members.length ? totalSpent / state.members.length : 0;
+  html += `<div class="summary-card" style="margin-bottom:4px">
+    <div class="summary-box"><div class="s-val">฿${fmt(totalSpent)}</div><div class="s-label">ยอดรวมทั้งทริป</div></div>
+    <div class="summary-box"><div class="s-val">฿${fmt(avgPerHead)}</div><div class="s-label">เฉลี่ย/คน</div></div>
+    <div class="summary-box"><div class="s-val">${state.expenses.length}</div><div class="s-label">รายการ</div></div>
+  </div>`;
+
   html += `<div class="section-title">ส่วนที่ 1 — สรุปต่อรายการ</div>`;
   html += `<div class="card" style="overflow-x:auto"><table class="result-table"><thead><tr><th>รายการ</th><th class="text-right">ราคา</th><th>ออก</th><th>ต่อหัว</th></tr></thead><tbody>`;
   state.expenses.forEach(exp => {
@@ -833,10 +894,14 @@ function renderResults() {
   if (!transfers.length) {
     html += `<div class="card"><p style="color:var(--green);text-align:center;font-weight:600">✅ ทุกคนจ่ายเท่ากัน ไม่ต้องโอน!</p></div>`;
   } else {
-    html += `<p style="font-size:13px;color:var(--muted);margin-bottom:8px">ทั้งหมด ${transfers.length} ธุรกรรม</p>`;
-    transfers.sort((a, b) => b.amount - a.amount).forEach(t => {
+    const sorted = transfers.slice().sort((a, b) => b.amount - a.amount);
+    const doneCount = sorted.filter(t => state.settled[settleKey(t)]).length;
+    html += `<p class="settle-progress">โอนแล้ว ${doneCount}/${sorted.length} ธุรกรรม</p>`;
+    sorted.forEach(t => {
       const recipientQR = state.qrcodes && state.qrcodes[t.to];
-      html += `<div class="transfer-item">
+      const key = settleKey(t);
+      const done = !!state.settled[key];
+      html += `<div class="transfer-item${done ? ' settled' : ''}">
         <div class="transfer-names">
           <span style="color:var(--red)">${escHtml(t.from)}</span>
           <span class="arrow">→</span>
@@ -845,6 +910,7 @@ function renderResults() {
         <div class="transfer-right">
           <div class="transfer-amount">฿${fmt(t.amount)}</div>
           ${recipientQR ? `<button class="qr-scan-btn" onclick="openQRModal('${escAttr(t.to)}')">📱 QR</button>` : ''}
+          <button class="settle-btn${done ? ' done' : ''}" onclick="toggleSettled('${escAttr(key)}')">${done ? '✓ โอนแล้ว' : 'โอนแล้ว?'}</button>
         </div>
       </div>`;
     });
@@ -852,26 +918,39 @@ function renderResults() {
   el.innerHTML = html;
 }
 
+function settleKey(t) { return `${t.from}__${t.to}__${t.amount}`; }
+
+function toggleSettled(key) {
+  if (!state.settled) state.settled = {};
+  if (state.settled[key]) delete state.settled[key];
+  else state.settled[key] = true;
+  saveState();
+  renderResults();
+}
+
 // ─── Session Actions ──────────────────────────────────────────────────────────
 function newSession() {
   if (!confirm('ล้างข้อมูลทั้งหมด?')) return;
   if (isSharedSession) leaveSession();
-  state = { members: [], expenses: [], qrcodes: {} };
+  state = { members: [], expenses: [], qrcodes: {}, settled: {}, tripName: '' };
   persistLocal(); renderAll(); toast('ล้างข้อมูลแล้ว');
 }
 function exportSession() {
   if (!state.expenses.length) { toast('ยังไม่มีข้อมูล'); return; }
   const { net } = calcAll();
   const transfers = minTransfers(net);
-  let text = '💸 PayPerUsed — สรุปค่าใช้จ่าย\n' + '─'.repeat(30) + '\n';
-  text += `📋 ${state.expenses.length} รายการ\n\n👤 สรุปต่อคน\n`;
+  const total = state.expenses.reduce((s, e) => s + e.amount, 0);
+  let text = '💸 PayPerUsed — สรุปค่าใช้จ่าย\n';
+  if (state.tripName) text += `📍 ${state.tripName}\n`;
+  text += '─'.repeat(30) + '\n';
+  text += `📋 ${state.expenses.length} รายการ • ยอดรวม ฿${fmt(total)}\n\n👤 สรุปต่อคน\n`;
   state.members.forEach(m => {
     const n = net[m];
     text += `  ${m}: ${n > 0.5 ? `รับคืน ฿${fmt(n)}` : n < -0.5 ? `ต้องจ่าย ฿${fmt(-n)}` : 'เสมอ'}\n`;
   });
   text += '\n💸 รายการโอน\n';
   if (!transfers.length) text += '  ไม่ต้องโอน\n';
-  else transfers.forEach(t => { text += `  ${t.from} → ${t.to}: ฿${fmt(t.amount)}\n`; });
+  else transfers.forEach(t => { text += `  ${state.settled[settleKey(t)] ? '✅' : '⬜'} ${t.from} → ${t.to}: ฿${fmt(t.amount)}\n`; });
   navigator.clipboard.writeText(text).then(() => toast('คัดลอกแล้ว ✓')).catch(() => toast('คัดลอกไม่ได้'));
 }
 
@@ -879,7 +958,19 @@ function exportSession() {
 function fmt(n) { return Math.round(n).toLocaleString('th-TH'); }
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(s) { return String(s).replace(/'/g,'&#39;').replace(/"/g,'&quot;'); }
-function renderAll() { renderMembers(); renderExpenses(); }
+function renderAll() { renderTripName(); renderMembers(); renderExpenses(); }
+
+function renderTripName() {
+  const input = document.getElementById('trip-name');
+  if (input && document.activeElement !== input) input.value = state.tripName || '';
+}
+
+let tripNameTimer = null;
+function onTripNameInput() {
+  state.tripName = document.getElementById('trip-name').value;
+  clearTimeout(tripNameTimer);
+  tripNameTimer = setTimeout(saveState, 600);
+}
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 const urlSession = new URLSearchParams(location.search).get('s');
@@ -891,6 +982,7 @@ if (urlSession) {
   renderSessionCard();
   setSyncDot('off');
 }
+cleanupOldSessions();
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 document.getElementById('new-member').addEventListener('keydown', e => { if (e.key === 'Enter') addMember(); });
