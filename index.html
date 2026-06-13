@@ -256,14 +256,14 @@
 </header>
 
 <nav class="tabs">
-  <div class="tab active" data-tab="members">👥 สมาชิก</div>
+  <div class="tab active" data-tab="food">🍽️ สุ่มอาหาร</div>
+  <div class="tab" data-tab="members">👥 สมาชิก</div>
   <div class="tab" data-tab="expenses">🧾 ค่าใช้จ่าย</div>
   <div class="tab" data-tab="results">📊 สรุป</div>
-  <div class="tab" data-tab="food">🍽️ สุ่มอาหาร</div>
 </nav>
 
 <main>
-  <div class="page active" id="page-members">
+  <div class="page" id="page-members">
     <div class="card">
       <div class="card-title">ชื่อทริป / กลุ่ม</div>
       <input type="text" id="trip-name" placeholder="เช่น เที่ยวเชียงใหม่ 2569" maxlength="40" autocomplete="off" oninput="onTripNameInput()">
@@ -293,7 +293,7 @@
     <div id="results-content"></div>
   </div>
 
-  <div class="page" id="page-food">
+  <div class="page active" id="page-food">
     <div class="card" id="winnerBanner" style="display:none;text-align:center;background:linear-gradient(135deg,#f59e0b,#f43f5e,#f97316);border:none">
       <div style="font-size:12px;font-weight:700;letter-spacing:.1em;color:rgba(255,255,255,.85)">🎉 เมนูที่ได้คือ 🎉</div>
       <div id="winnerName" style="font-size:28px;font-weight:800;color:#fff;margin:6px 0;line-height:1.2"></div>
@@ -1195,7 +1195,7 @@ document.getElementById('new-member').addEventListener('keydown', e => { if (e.k
   };
   const sliceColors = ["#f43f5e","#ec4899","#d946ef","#a855f7","#8b5cf6","#6366f1","#3b82f6","#0ea5e9","#06b6d4","#14b8a6","#10b981","#22c55e","#84cc16","#eab308","#f97316","#ef4444"];
 
-  let items = [...presets.thai];
+  let items = [...presets.itree];
   let history = [];
   let currentAngle = 0, isSpinning = false, lastTickedSlice = -1;
   const canvas = document.getElementById('wheelCanvas');
@@ -1319,7 +1319,7 @@ document.getElementById('new-member').addEventListener('keydown', e => { if (e.k
 
   function resetFood() {
     if (isSpinning) return;
-    items = [...presets.thai]; history = [];
+    items = [...presets.itree]; history = [];
     renderFoodList(); drawWheel(); renderHistory(); closeWinnerBanner();
   }
 
