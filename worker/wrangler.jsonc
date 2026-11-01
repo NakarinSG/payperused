@@ -3,6 +3,9 @@
   "name": "payperused-scan",
   "main": "src/index.js",
   "compatibility_date": "2026-10-01",
+  // ใช้ URL เดียว (*.workers.dev) — ปิด preview URL ของแต่ละเวอร์ชันไม่ให้มีทางเข้าเพิ่ม
+  "workers_dev": true,
+  "preview_urls": false,
   "vars": {
     // หน้าเว็บที่อนุญาตให้เรียก (คั่นด้วย ,)
     "ALLOWED_ORIGINS": "https://nakarinsg.github.io",
