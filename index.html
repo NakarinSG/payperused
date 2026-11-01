@@ -172,6 +172,16 @@
   .split-preview.empty-hint { background: var(--surface2); border-color: var(--border); color: var(--muted); font-size: 13px; }
   .split-preview b { color: var(--accent2); }
   .split-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .item-row { padding: 8px 0; border-bottom: 1px solid var(--surface2); }
+  .item-row:last-child { border-bottom: none; }
+  .item-head { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+  .item-head span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item-eaters { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .mini-chip {
+    min-height: 32px; padding: 4px 11px; border-radius: 16px; font: inherit; font-size: 12.5px; cursor: pointer;
+    background: var(--surface2); border: 1px solid var(--border); color: var(--muted); touch-action: manipulation;
+  }
+  .mini-chip.on { border-color: var(--accent); background: rgba(99,102,241,.15); color: var(--text); }
 
   [hidden] { display: none !important; }
   .scan-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
@@ -355,6 +365,28 @@
     display: flex; justify-content: center; margin-bottom: 16px;
   }
   .qr-img-wrap img { max-width: 260px; width: 100%; display: block; border-radius: 4px; }
+  .qr-img-wrap svg { display: block; width: 100%; max-width: 260px; height: auto; }
+  .pp-meta { text-align: center; font-size: 13px; color: var(--muted); margin: -8px 0 14px; line-height: 1.6; }
+  .pp-meta b { color: var(--text); }
+  .pp-edit { margin-bottom: 12px; }
+  .pp-edit .add-row { margin-top: 4px; }
+  .pp-hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .slip-check { margin: -4px 0 12px; padding: 9px 12px; border-radius: 10px; font-size: 13px; line-height: 1.6; }
+  .slip-check.ok { background: rgba(34,197,94,.12); border: 1px solid rgba(34,197,94,.4); }
+  .slip-check.bad { background: rgba(248,113,113,.12); border: 1px solid rgba(248,113,113,.4); }
+  .slip-check.busy { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); }
+  .share-row { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .share-row .btn { white-space: nowrap; padding-left: 10px; padding-right: 10px; }
+  .btn-line { background: #06c755; color: #fff; }
+  .profile-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 8px; }
+  .profile-grid label { margin-top: 0; }
+  .friend-suggest { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .friend-suggest:empty { display: none; }
+  .trip-row { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--surface2); }
+  .trip-row:last-child { border-bottom: none; }
+  .trip-main { flex: 1; min-width: 0; cursor: pointer; }
+  .trip-name { font-weight: 700; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .trip-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
   .qr-empty {
     background: var(--surface2); border-radius: 12px; padding: 40px 20px;
     text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 16px;
@@ -574,6 +606,7 @@
 
 <main>
   <div class="page active" id="page-members">
+    <div class="card" id="profile-card"></div>
     <div class="card">
       <div class="card-title">ชื่อทริป / กลุ่ม</div>
       <input type="text" id="trip-name" placeholder="เช่น เที่ยวเชียงใหม่ 2569" maxlength="40" autocomplete="off" oninput="onTripNameInput()">
@@ -585,12 +618,15 @@
         <input type="text" id="new-member" placeholder="ชื่อสมาชิก" maxlength="20" autocomplete="off">
         <button class="btn btn-primary btn-sm" onclick="addMember()" style="width:auto;white-space:nowrap">+ เพิ่ม</button>
       </div>
+      <div class="friend-suggest" id="friend-suggest" aria-label="เพื่อนที่เคยหารด้วย"></div>
     </div>
     <div class="card" id="session-card"></div>
+    <div class="card" id="trips-card" hidden></div>
     <div class="card">
       <div class="card-title">อื่นๆ</div>
-      <button class="btn btn-ghost btn-sm" onclick="newSession()" style="width:100%;margin-bottom:8px">🔄 ล้างข้อมูลทั้งหมด</button>
-      <button class="btn btn-ghost btn-sm" onclick="exportSession()" style="width:100%">📋 คัดลอกสรุปข้อความ</button>
+      <button class="btn btn-line btn-sm" onclick="shareToLine()" style="width:100%;margin-bottom:8px">💬 ส่งสรุปเข้า LINE</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportSession()" style="width:100%;margin-bottom:8px">📋 คัดลอกสรุปข้อความ</button>
+      <button class="btn btn-ghost btn-sm" onclick="newSession()" style="width:100%">🔄 ล้างข้อมูลทั้งหมด</button>
     </div>
   </div>
 
@@ -634,7 +670,17 @@
       <button type="button" class="link-btn" id="exp-all-btn" onclick="toggleAllParticipants()"></button>
     </div>
     <div class="check-grid" id="exp-participants" role="group" aria-label="คนที่ร่วมหาร"></div>
-    <div class="toggle-row">
+    <div id="exp-items" hidden>
+      <div class="toggle-row">
+        <span class="toggle-label">🧾 แบ่งตามรายการในบิล (ใครกินอะไร)</span>
+        <label class="toggle">
+          <input type="checkbox" id="items-toggle" onchange="toggleItemSplit()">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div id="exp-items-list"></div>
+    </div>
+    <div class="toggle-row" id="weight-row">
       <span class="toggle-label">หารไม่เท่ากัน (ตั้งน้ำหนัก)</span>
       <label class="toggle">
         <input type="checkbox" id="weight-toggle" onchange="toggleWeights()">
@@ -706,6 +752,9 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="js/qrcode.js"></script>
+<script src="js/promptpay.js"></script>
+<script src="js/itemsplit.js"></script>
 <script>
 firebase.initializeApp({
   apiKey: "AIzaSyAhkK7cl2-ek9LrQGhisyvKacQ21Qru6Xs",
@@ -719,7 +768,7 @@ firebase.initializeApp({
 const db = firebase.database();
 
 // ─── State ────────────────────────────────────────────────────────────────────
-let state = { members: [], expenses: [], qrcodes: {}, settled: {}, slips: {}, tripName: '' };
+let state = { members: [], expenses: [], qrcodes: {}, promptpay: {}, settled: {}, slips: {}, slipChecks: {}, tripName: '' };
 let editingExpenseId = null;
 
 const SESSION_TTL_MS = 15 * 24 * 60 * 60 * 1000; // 15 วัน
@@ -781,8 +830,10 @@ document.querySelectorAll('.nav-item').forEach(t => {
 // ─── Storage ──────────────────────────────────────────────────────────────────
 function loadLocalState() {
   const s = localStorage.getItem('payperused');
-  state = s ? JSON.parse(s) : { members: [], expenses: [], qrcodes: {}, settled: {}, slips: {}, tripName: '' };
+  state = s ? JSON.parse(s) : { members: [], expenses: [], qrcodes: {}, promptpay: {}, settled: {}, slips: {}, slipChecks: {}, tripName: '' };
   if (!state.qrcodes) state.qrcodes = {};
+  if (!state.promptpay) state.promptpay = {};
+  if (!state.slipChecks) state.slipChecks = {};
   if (!state.settled) state.settled = {};
   if (!state.slips) state.slips = {};
   if (state.tripName == null) state.tripName = '';
@@ -807,8 +858,10 @@ function normalizeState(data) {
     members: toArr(data.members),
     expenses: toArr(data.expenses),
     qrcodes: data.qrcodes || {},
+    promptpay: data.promptpay || {},
     settled: data.settled || {},
     slips: data.slips || {},
+    slipChecks: data.slipChecks || {},
     tripName: data.tripName || ''
   };
 }
@@ -844,10 +897,10 @@ function showIdentityModal() {
   if (!state.members.length) return;
   const el = document.getElementById('identity-choices');
   el.innerHTML = state.members.map(m => {
-    const hasQR = !!(state.qrcodes && state.qrcodes[m]);
-    return `<button type="button" class="identity-choice" onclick="selectIdentity(${jsArg(m)})">
+    const hasQR = hasPayInfo(m);
+    return `<button type="button" class="identity-choice${m === getProfile().name ? ' chip-me' : ''}" onclick="selectIdentity(${jsArg(m)})">
       <span class="ic-name">${escHtml(m)}</span>
-      <span class="${hasQR ? 'ic-qr' : 'ic-noqr'}">${hasQR ? '📱 มี QR แล้ว' : 'ยังไม่มี QR'}</span>
+      <span class="${hasQR ? 'ic-qr' : 'ic-noqr'}">${hasQR ? '📱 มีพร้อมเพย์แล้ว' : 'ยังไม่มีพร้อมเพย์'}</span>
     </button>`;
   }).join('');
   document.getElementById('identity-modal').classList.add('open');
@@ -855,13 +908,13 @@ function showIdentityModal() {
 
 function selectIdentity(name) {
   setIdentity(name);
+  applyProfileTo(name);
   closeIdentityModal();
   renderSessionCard();
   renderMembers();
   if (currentTab() === 'results') renderResults();
   toast(`สวัสดี ${name}! 👋`);
-  const hasQR = state.qrcodes && state.qrcodes[name];
-  if (!hasQR) setTimeout(() => openQRModal(name), 350);
+  if (!hasPayInfo(name)) setTimeout(() => openQRModal(name), 350);
 }
 
 function closeIdentityModal() {
@@ -873,29 +926,56 @@ let currentQRMember = null;
 
 function openQRModal(name) {
   currentQRMember = name;
-  document.getElementById('qr-modal-name').textContent = `QR PromptPay — ${name}`;
-  document.getElementById('qr-modal-sub').textContent = 'สแกนเพื่อโอนเงินได้เลย';
+  document.getElementById('qr-modal-name').textContent = `รับเงินของ ${name}`;
+  document.getElementById('qr-modal-sub').textContent = 'ใส่เบอร์พร้อมเพย์ไว้ แล้วเพื่อนจะได้ QR ที่ใส่ยอดให้อัตโนมัติ';
   renderQRModalContent(name);
   document.getElementById('qr-modal').classList.add('open');
 }
 
+// QR พร้อมเพย์ที่สร้างเอง (SVG) — ใส่ยอดได้ แอปธนาคารจะกรอกยอดให้เลย
+function promptPayQrHtml(id, amount, label) {
+  const qr = qrcode(0, 'M');
+  qr.addData(PromptPay.payload(id, amount));
+  qr.make();
+  return `<div class="qr-img-wrap">${qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true, title: label })}</div>`;
+}
+function hasPayInfo(name) { return !!((state.promptpay && state.promptpay[name]) || (state.qrcodes && state.qrcodes[name])); }
+
+// ในกลุ่มที่แชร์ แก้ช่องทางรับเงินได้เฉพาะเจ้าตัว — กันคนอื่นเปลี่ยนเบอร์/QR เป็นของตัวเองแล้วเงินไปผิดคน
+// (เป็นการกันที่หน้าเว็บ ฐานข้อมูลยังเปิดอยู่ — ดูคำเตือนใต้ QR ในหน้าโอนเงิน)
+function canEditPayInfo(name) { return !isSharedSession || getIdentity() === name; }
+
 function renderQRModalContent(name) {
   const qr = state.qrcodes && state.qrcodes[name];
+  const pp = state.promptpay && state.promptpay[name];
   const imgEl = document.getElementById('qr-modal-img');
   const actEl = document.getElementById('qr-modal-actions');
-  const identity = getIdentity();
-  const canEdit = !isSharedSession || identity === name || !identity;
+  const canEdit = canEditPayInfo(name);
 
-  if (qr) {
+  if (pp) {
+    imgEl.innerHTML = promptPayQrHtml(pp, null, `PromptPay ${name}`)
+      + `<div class="pp-meta">พร้อมเพย์ <b>${escHtml(PromptPay.mask(pp))}</b><br>ตอนโอน QR ในหน้าสรุปจะใส่ยอดให้อัตโนมัติ</div>`;
+  } else if (qr) {
     imgEl.innerHTML = `<div class="qr-img-wrap"><img src="${qr}" alt="QR ${escHtml(name)}"></div>`;
   } else {
-    imgEl.innerHTML = `<div class="qr-empty">📱<br><br>ยังไม่มี QR Code<br><span style="font-size:12px">อัพโหลดรูป QR PromptPay ของ ${escHtml(name)}</span></div>`;
+    imgEl.innerHTML = `<div class="qr-empty">📱<br><br>ยังไม่มีช่องทางรับเงิน<br><span style="font-size:12px">${canEdit ? 'ใส่เบอร์พร้อมเพย์ด้านล่าง' : `ให้ ${escHtml(name)} ใส่เบอร์พร้อมเพย์เอง`}</span></div>`;
   }
 
   let btns = '';
   if (canEdit) {
-    btns += `<button class="btn btn-primary" onclick="document.getElementById('qr-file-input').click()" style="margin-bottom:8px">
-      📷 ${qr ? 'เปลี่ยน QR ใหม่' : 'อัพโหลด QR Code'}
+    btns += `<div class="pp-edit">
+      <label for="pp-input">เบอร์พร้อมเพย์ (หรือเลข e-Wallet)</label>
+      <div class="add-row">
+        <input type="text" id="pp-input" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="08x-xxx-xxxx" value="${escHtml(pp || '')}" data-name="${escAttr(name)}">
+        <button class="btn btn-primary btn-sm" style="width:auto;white-space:nowrap" onclick="savePromptPay(${jsArg(name)})">บันทึก</button>
+      </div>
+      <div class="pp-hint">แนะนำใช้เบอร์มือถือ ไม่แนะนำเลขบัตรประชาชน เพราะทุกคนที่มีลิงก์กลุ่มจะเห็นข้อมูลนี้</div>
+    </div>`;
+    if (pp) {
+      btns += `<button class="btn btn-ghost btn-sm" onclick="removePromptPay(${jsArg(name)})" style="width:100%;color:var(--red);border-color:rgba(248,113,113,.4);margin-bottom:8px">🗑 ลบเบอร์พร้อมเพย์</button>`;
+    }
+    btns += `<button class="btn btn-ghost btn-sm" onclick="document.getElementById('qr-file-input').click()" style="width:100%;margin-bottom:8px">
+      📷 ${qr ? 'เปลี่ยนรูป QR ธนาคาร' : 'หรืออัปโหลดรูป QR ของธนาคาร'}
     </button>`;
     if (qr) {
       btns += `<button class="btn btn-ghost btn-sm" onclick="deleteQR(${jsArg(name)})" style="width:100%;color:var(--red);border-color:rgba(248,113,113,.4);margin-bottom:8px">
@@ -905,6 +985,36 @@ function renderQRModalContent(name) {
   }
   btns += `<button class="btn btn-ghost" onclick="closeQRModal()" style="width:100%">ปิด</button>`;
   actEl.innerHTML = btns;
+  const input = document.getElementById('pp-input');
+  if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') savePromptPay(name); });
+}
+
+function savePromptPay(name) {
+  if (!canEditPayInfo(name)) return;
+  const input = document.getElementById('pp-input');
+  const id = PromptPay.parseId(input.value);
+  if (!id) { input.classList.add('invalid'); input.focus(); toast('เลขพร้อมเพย์ไม่ถูกต้อง (เบอร์ 10 หลัก / เลขบัตร 13 หลัก)'); return; }
+  if (!state.promptpay) state.promptpay = {};
+  state.promptpay[name] = id.digits;
+  saveState();
+  saveProfilePromptPay(name, id.digits);
+  renderQRModalContent(name);
+  renderMembers();
+  toast('บันทึกพร้อมเพย์แล้ว ✓');
+}
+
+function removePromptPay(name) {
+  const prev = state.promptpay && state.promptpay[name];
+  if (!prev || !canEditPayInfo(name)) return;
+  delete state.promptpay[name];
+  saveState();
+  renderQRModalContent(name);
+  renderMembers();
+  toast(`ลบพร้อมเพย์ของ ${name} แล้ว`, { action: 'เลิกทำ', onAction: () => {
+    state.promptpay[name] = prev;
+    saveState(); renderMembers();
+    if (currentQRMember === name) renderQRModalContent(name);
+  } });
 }
 
 function closeQRModal() {
@@ -1087,13 +1197,13 @@ function renderSessionCard() {
 }
 
 // ─── Members ─────────────────────────────────────────────────────────────────
-function addMember() {
+function addMember(preset) {
   const input = document.getElementById('new-member');
-  const name = input.value.trim();
+  const name = (typeof preset === 'string' ? preset : input.value).trim();
   if (!name) return;
   if (state.members.includes(name)) { toast('มีชื่อนี้แล้ว'); return; }
   state.members.push(name);
-  saveState(); input.value = ''; renderMembers();
+  saveState(); input.value = ''; renderMembers(); renderProfileCard();
 }
 function removeMember(name) {
   if (state.expenses.some(e => e.payer === name || e.participants.includes(name))) {
@@ -1105,15 +1215,17 @@ function removeMember(name) {
 }
 function renderMembers() {
   const identity = getIdentity();
+  rememberFriends(state.members);
   document.getElementById('member-chips').innerHTML = state.members.map(m => {
-    const hasQR = !!(state.qrcodes && state.qrcodes[m]);
+    const hasQR = hasPayInfo(m);
     const isMe = m === identity;
     return `<div class="chip${isMe ? ' chip-me' : ''}">
       ${escHtml(m)}
-      <button class="chip-qr-btn${hasQR ? ' has-qr' : ''}" onclick="openQRModal(${jsArg(m)})" title="${hasQR ? 'ดู/เปลี่ยน QR' : 'เพิ่ม QR'}">📱</button>
-      <button class="chip-del" onclick="removeMember(${jsArg(m)})" title="ลบ">×</button>
+      <button class="chip-qr-btn${hasQR ? ' has-qr' : ''}" onclick="openQRModal(${jsArg(m)})" title="${hasQR ? 'ดู/แก้พร้อมเพย์' : 'เพิ่มพร้อมเพย์'}" aria-label="พร้อมเพย์ของ ${escAttr(m)}">📱</button>
+      <button class="chip-del" onclick="removeMember(${jsArg(m)})" title="ลบ" aria-label="ลบ ${escAttr(m)}">×</button>
     </div>`;
   }).join('');
+  renderFriendSuggest();
 }
 
 // ─── Expense Modal ────────────────────────────────────────────────────────────
@@ -1133,7 +1245,7 @@ function openExpenseModal(id = null) {
     document.getElementById('exp-amount').value = exp.amount;
     payer.value = exp.payer;
     participantEls().forEach(el => setParticipant(el, exp.participants.includes(el.dataset.name)));
-    if (exp.weights) {
+    if (exp.weights && !exp.items) {
       document.getElementById('weight-toggle').checked = true;
       document.getElementById('weight-section').style.display = 'block';
       renderWeightInputs(exp.participants, exp.weights);
@@ -1146,6 +1258,8 @@ function openExpenseModal(id = null) {
     if (me && state.members.includes(me)) payer.value = me;
     participantEls().forEach(el => setParticipant(el, true));
   }
+  const editing = id && state.expenses.find(e => e.id === id);
+  setItemSplit(editing && editing.items, true);
   onParticipantsChanged();
   initScanUi();
   document.getElementById('expense-modal').classList.add('open');
@@ -1246,7 +1360,7 @@ function fillFromScan(r) {
   name.value = r.title;
   amount.value = r.total;
   [name, amount].forEach(f => f.classList.remove('invalid'));
-  updateSplitPreview();
+  setItemSplit(r.items, false);
   const low = r.confidence < 0.7;
   const date = r.date ? new Date(r.date + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
   const info = document.getElementById('exp-scan-info');
@@ -1279,7 +1393,82 @@ function onParticipantsChanged() {
   if (document.getElementById('weight-toggle').checked) updateWeightInputs();
   const all = participantEls().every(el => el.classList.contains('selected'));
   document.getElementById('exp-all-btn').textContent = all ? 'ล้างการเลือก' : 'เลือกทุกคน';
+  if (itemSplit && itemSplit.on) renderItemSplit(); else updateSplitPreview();
+}
+
+// ─── แบ่งตามรายการในบิล ───────────────────────────────────────────────────────
+// itemSplit = { on, items: [{ name, qty, price, eaters }] } — eaters ว่าง = ทุกคนที่ร่วมหาร
+// ตอนบันทึก ยอดของแต่ละคนถูกเก็บเป็น weights (โครงสร้างเดิม) หน้าสรุปจึงคำนวณได้โดยไม่ต้องแก้
+let itemSplit = null;
+
+function setItemSplit(items, on) {
+  itemSplit = items && items.length >= 2
+    ? { on: !!on, items: items.map(it => ({ name: it.name, qty: it.qty || 1, price: +it.price, eaters: (it.eaters || []).slice() })) }
+    : null;
+  document.getElementById('items-toggle').checked = !!(itemSplit && itemSplit.on);
+  renderItemSplit();
+}
+
+function toggleItemSplit() {
+  if (!itemSplit) return;
+  itemSplit.on = document.getElementById('items-toggle').checked;
+  renderItemSplit();
+}
+
+function itemEaters(it, participants) {
+  const eaters = it.eaters.filter(m => participants.includes(m));
+  return eaters.length ? eaters : participants;
+}
+
+function renderItemSplit() {
+  document.getElementById('exp-items').hidden = !itemSplit;
+  const on = !!(itemSplit && itemSplit.on);
+  // แบ่งตามรายการ = ระบบคำนวณน้ำหนักให้ จึงซ่อนการตั้งน้ำหนักเอง
+  document.getElementById('weight-row').hidden = on;
+  if (on) {
+    document.getElementById('weight-toggle').checked = false;
+    document.getElementById('weight-section').style.display = 'none';
+  }
+  const list = document.getElementById('exp-items-list');
+  if (!on) {
+    list.innerHTML = itemSplit ? `<div class="pp-hint">AI อ่านได้ ${itemSplit.items.length} รายการ เปิดสวิตช์เพื่อเลือกว่าใครกินอะไร</div>` : '';
+    updateSplitPreview();
+    return;
+  }
+  const participants = getSelectedParticipants();
+  list.innerHTML = itemSplit.items.map((it, i) => {
+    const eaters = itemEaters(it, participants);
+    return `<div class="item-row">
+      <div class="item-head"><span>${escHtml(it.name)}${it.qty > 1 ? ' ×' + it.qty : ''}</span><b>฿${it.price.toLocaleString('th-TH', { maximumFractionDigits: 2 })}</b></div>
+      <div class="item-eaters">${participants.map(m =>
+        `<button type="button" class="mini-chip${eaters.includes(m) ? ' on' : ''}" aria-pressed="${eaters.includes(m)}" data-i="${i}" data-name="${escAttr(m)}" onclick="toggleItemEater(this)">${escHtml(m)}</button>`).join('')}</div>
+    </div>`;
+  }).join('');
   updateSplitPreview();
+}
+
+function toggleItemEater(el) {
+  const it = itemSplit.items[+el.dataset.i];
+  const participants = getSelectedParticipants();
+  const current = itemEaters(it, participants);
+  const name = el.dataset.name;
+  const next = current.includes(name) ? current.filter(m => m !== name) : [...current, name];
+  if (!next.length) { toast('แต่ละรายการต้องมีคนกินอย่างน้อย 1 คน'); return; }
+  it.eaters = next.length === participants.length ? [] : next;
+  renderItemSplit();
+}
+
+// ยอดรวมทั้งบิลกระจายเป็นยอดต่อคน → participants/weights แบบเดียวกับการตั้งน้ำหนักเอง
+function itemSplitExpense(amount) {
+  const participants = getSelectedParticipants();
+  const r = ItemSplit.split(itemSplit.items.map(it => ({ price: it.price, eaters: itemEaters(it, participants) })), amount, participants);
+  const people = participants.filter(m => r.shares[m] > 0);
+  return {
+    r,
+    participants: people,
+    weights: Object.fromEntries(people.map(m => [m, r.shares[m]])),
+    items: itemSplit.items.map(it => ({ name: it.name, qty: it.qty, price: it.price, eaters: itemEaters(it, participants) })),
+  };
 }
 function toggleParticipant(el) { setParticipant(el, !el.classList.contains('selected')); onParticipantsChanged(); }
 function toggleAllParticipants() {
@@ -1308,6 +1497,14 @@ function updateSplitPreview() {
     return;
   }
   el.className = 'split-preview';
+  if (itemSplit && itemSplit.on) {
+    const x = itemSplitExpense(amount);
+    const shares = calcPerPerson({ amount, participants: x.participants, weights: x.weights });
+    el.innerHTML = `แบ่งตามรายการ · ค่าบริการ/VAT/ส่วนลด ${x.r.extras < 0 ? '−' : '+'}฿${fmt(Math.abs(x.r.extras))} กระจายตามสัดส่วน`
+      + (x.r.mismatch ? `<br><span style="color:var(--red)">⚠️ ราคารายการรวม ฿${fmt(x.r.itemsSum)} ต่างจากยอดบิลมาก ตรวจรายการอีกครั้ง</span>` : '')
+      + `<div class="split-pills">${x.participants.map(m => `<span class="share-pill">${escHtml(m)} <b>฿${fmt(shares[m])}</b></span>`).join('')}</div>`;
+    return;
+  }
   const weights = getWeightsFromForm();
   const shares = calcPerPerson({ amount, participants, weights });
   const sum = participants.reduce((t, m) => t + shares[m], 0);
@@ -1343,12 +1540,16 @@ function saveExpense() {
   if (!name) { invalid('exp-name', 'ระบุชื่อรายการด้วย'); return; }
   if (!amount || amount <= 0) { invalid('exp-amount', 'ระบุราคาด้วย'); return; }
   if (!participants.length) { toast('เลือกคนร่วมหารอย่างน้อย 1 คน'); return; }
-  const weights = getWeightsFromForm();
+  let exp = { name, amount, payer, participants, weights: getWeightsFromForm() };
+  if (itemSplit && itemSplit.on) {
+    const x = itemSplitExpense(amount);
+    exp = { ...exp, participants: x.participants, weights: x.weights, items: x.items };
+  }
   if (editingExpenseId) {
     const idx = state.expenses.findIndex(e => e.id === editingExpenseId);
-    state.expenses[idx] = { id: editingExpenseId, name, amount, payer, participants, weights };
+    state.expenses[idx] = { id: editingExpenseId, ...exp };
   } else {
-    state.expenses.push({ id: Date.now().toString(), name, amount, payer, participants, weights });
+    state.expenses.push({ id: Date.now().toString(), ...exp });
   }
   saveState(); renderExpenses(); closeExpenseModal(); toast('บันทึกแล้ว ✓');
 }
@@ -1374,7 +1575,7 @@ function renderExpenses() {
     const info = `<div class="expense-info">
         <div class="expense-name">${escHtml(exp.name)}</div>
         <div class="expense-meta">💳 ${escHtml(exp.payer)} • 👥 ${exp.participants.map(escHtml).join(', ')}</div>
-        ${exp.weights ? `<div class="expense-meta" style="color:var(--accent2)">⚖️ หารตามน้ำหนัก</div>` : ''}
+        ${exp.weights ? `<div class="expense-meta" style="color:var(--accent2)">${exp.items ? '🧾 แบ่งตามรายการในบิล' : '⚖️ หารตามน้ำหนัก'}</div>` : ''}
       </div>`;
     if (mobile) {
       return `<div class="swipe-wrap">
@@ -1472,7 +1673,7 @@ function perExpenseHtml() {
         <div class="res-name">${escHtml(exp.name)}</div>
         <div class="res-amount">฿${fmt(exp.amount)}</div>
       </div>
-      <div class="res-payer">💳 ${escHtml(exp.payer)} ออกก่อน${exp.weights ? ' • ⚖️ หารตามน้ำหนัก' : ''}</div>
+      <div class="res-payer">💳 ${escHtml(exp.payer)} ออกก่อน${exp.weights ? (exp.items ? ' • 🧾 แบ่งตามรายการ' : ' • ⚖️ หารตามน้ำหนัก') : ''}</div>
       <div class="res-shares">
         ${exp.participants.map(m => `<span class="share-pill">${escHtml(m)} <b>฿${fmt(shares[m])}</b></span>`).join('')}
       </div>
@@ -1517,7 +1718,7 @@ function transfersHtml(sorted) {
           <span style="color:var(--red)">${escHtml(t.from)}</span>
           <span class="arrow">→</span>
           <span style="color:var(--green)">${escHtml(t.to)}</span>
-          ${hasSlip ? '<span title="มีสลิป" style="margin-left:6px">📎</span>' : ''}
+          ${hasSlip ? '<span title="มีสลิป" style="margin-left:6px">📎</span>' : ''}${state.slipChecks && state.slipChecks[key] ? (state.slipChecks[key].ok ? '<span title="AI ตรวจสลิปแล้ว" style="margin-left:4px">✅</span>' : '<span title="สลิปมีจุดต้องตรวจ" style="margin-left:4px">⚠️</span>') : ''}
         </div>
         <div class="transfer-amount">฿${fmt(t.amount)}</div>
       </div>
@@ -1540,6 +1741,7 @@ function desktopResultsHtml(paid, owed, net, sorted) {
           <div class="summary-box"><div class="s-val">${state.expenses.length}</div><div class="s-label">รายการ</div></div>
         </div>
       </div>`
+    + `<div style="max-width:520px;margin-top:12px">${shareRowHtml()}</div>`
     + `<div class="section-title">ส่วนที่ 1 — สรุปต่อรายการ</div>` + perExpenseHtml()
     + `<div class="section-title">ส่วนที่ 2 — สรุปต่อคน</div>` + perPersonHtml(paid, owed, net)
     + `<div class="section-title">ส่วนที่ 3 — รายการโอนเงิน</div>` + transfersHtml(sorted);
@@ -1550,6 +1752,7 @@ function mobileResultsHtml(paid, owed, net, sorted) {
   const doneCount = sorted.filter(t => state.settled[settleKey(t)]).length;
   return tripNameHtml()
     + meCardHtml(net, sorted)
+    + shareRowHtml()
     + `<div class="mini-stats">
         <div class="mini-stat"><div class="ms-val">฿${fmt(totalSpent)}</div><div class="ms-label">ยอดรวมทริป</div></div>
         <div class="mini-stat"><div class="ms-val">฿${fmt(avgPerHead)}</div><div class="ms-label">เฉลี่ย/คน</div></div>
@@ -1628,16 +1831,20 @@ function renderPayModal() {
   document.getElementById('pay-title').textContent = `${p.from} → ${p.to}`;
   document.getElementById('pay-sub').textContent = `ยอดโอน ฿${fmt(p.amount)}`;
 
-  // ผู้รับ QR
+  // ผู้รับ: พร้อมเพย์ (ใส่ยอดใน QR ให้เลย) > รูป QR ธนาคาร > ยังไม่มี
+  const pp = state.promptpay && state.promptpay[p.to];
   const qr = state.qrcodes && state.qrcodes[p.to];
-  document.getElementById('pay-qr').innerHTML = qr
-    ? `<div class="pay-sec-label">📱 สแกน QR ของ ${escHtml(p.to)} เพื่อโอน</div><div class="qr-img-wrap"><img src="${qr}" alt="QR ${escHtml(p.to)}"></div>`
-    : `<div class="qr-empty">📱<br><br>${escHtml(p.to)} ยังไม่ได้ใส่ QR PromptPay<br><span style="font-size:12px">บอกให้เจ้าตัวไปแนบ QR ในแท็บสมาชิก</span></div>`;
+  document.getElementById('pay-qr').innerHTML = pp
+    ? `<div class="pay-sec-label">📱 สแกนจ่าย ${escHtml(p.to)} — ใส่ยอด ฿${fmt(p.amount)} ใน QR แล้ว</div>${promptPayQrHtml(pp, p.amount, `PromptPay ${p.to} ${p.amount} บาท`)}
+       <div class="pp-meta">พร้อมเพย์ <b>${escHtml(PromptPay.mask(pp))}</b><br>ตรวจชื่อผู้รับในแอปธนาคารก่อนกดยืนยันทุกครั้ง</div>`
+    : qr
+      ? `<div class="pay-sec-label">📱 สแกน QR ของ ${escHtml(p.to)} แล้วใส่ยอด ฿${fmt(p.amount)} เอง</div><div class="qr-img-wrap"><img src="${qr}" alt="QR ${escHtml(p.to)}"></div>`
+      : `<div class="qr-empty">📱<br><br>${escHtml(p.to)} ยังไม่ได้ใส่พร้อมเพย์<br><span style="font-size:12px">บอกให้เจ้าตัวใส่เบอร์พร้อมเพย์ในแท็บสมาชิก</span></div>`;
 
   // สลิป
   const slip = state.slips && state.slips[p.key];
   document.getElementById('pay-slip').innerHTML = slip
-    ? `<div class="pay-sec-label">📎 สลิปการโอน</div><div class="slip-thumb"><img src="${slip}" alt="สลิป"></div>`
+    ? `<div class="pay-sec-label">📎 สลิปการโอน</div><div class="slip-thumb"><img src="${slip}" alt="สลิป"></div>${slipCheckHtml(p.key)}`
     : '';
 
   // ปุ่ม
@@ -1651,21 +1858,89 @@ function renderPayModal() {
 
 async function handleSlipUpload(event) {
   const file = event.target.files[0];
-  if (!file) return;
-  if (file.size > 8 * 1024 * 1024) { toast('ไฟล์ใหญ่เกินไป (สูงสุด 8MB)'); event.target.value = ''; return; }
+  event.target.value = '';
+  if (!file || !currentPay) return;
+  if (file.size > 8 * 1024 * 1024) { toast('ไฟล์ใหญ่เกินไป (สูงสุด 8MB)'); return; }
+  const pay = currentPay;
   try {
     const compressed = await compressImage(file);
     if (!state.slips) state.slips = {};
-    state.slips[currentPay.key] = compressed;
-    state.settled[currentPay.key] = true; // แนบสลิป = ถือว่าโอนแล้ว
+    state.slips[pay.key] = compressed;
+    delete state.slipChecks[pay.key];
+    const canCheck = !!SCAN_API_URL && Date.now() >= scanBlockedUntil;
+    if (!canCheck) state.settled[pay.key] = true; // ไม่มี AI ให้ตรวจ → แบบเดิม: แนบสลิป = โอนแล้ว
     saveState();
     renderPayModal();
     renderResults();
-    toast('แนบสลิปแล้ว ✓');
+    if (canCheck) await checkSlip(file, pay); else toast('แนบสลิปแล้ว ✓');
   } catch (e) {
     toast('แนบสลิปไม่สำเร็จ');
   }
-  event.target.value = '';
+}
+
+// ─── AI ตรวจสลิป: ยอดต้องตรง และเลขท้ายบัญชีผู้รับต้องตรงกับพร้อมเพย์ที่ลงไว้ ถึงจะติ๊ก "โอนแล้ว" ให้ ───
+let slipCheckingKey = null;
+
+async function checkSlip(file, pay) {
+  slipCheckingKey = pay.key;
+  renderPayModal();
+  try {
+    const dataUrl = await compressImage(file, 1600);
+    const res = await fetch(SCAN_API_URL + '/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: dataUrl.split(',')[1], mimeType: 'image/jpeg' }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data.usage) applyScanUsage(data.usage);
+    if (res.status === 429) blockScan(data.retryAfter || 60);
+    if (!res.ok || !data.result) {
+      // AI ใช้ไม่ได้ (โควตาหมด/ขัดข้อง) → กลับไปใช้แบบเดิม แต่บอกว่ายังไม่ได้ตรวจ
+      state.settled[pay.key] = true;
+      saveState();
+      toast(res.status === 429 ? 'แนบสลิปแล้ว (โควตา AI หมด ยังไม่ได้ตรวจ)' : 'แนบสลิปแล้ว (AI ตรวจไม่ได้ ตรวจเองอีกครั้ง)');
+      return;
+    }
+    const verdict = slipVerdict(data.result, pay);
+    state.slipChecks[pay.key] = verdict;
+    if (verdict.ok) state.settled[pay.key] = true;
+    saveState();
+    toast(verdict.ok ? '✅ AI ตรวจแล้ว ยอดตรง ติ๊กโอนแล้วให้' : '⚠️ ' + verdict.reason);
+  } catch (e) {
+    state.settled[pay.key] = true;
+    saveState();
+    toast('แนบสลิปแล้ว (AI ตรวจไม่ได้ ตรวจเองอีกครั้ง)');
+  } finally {
+    slipCheckingKey = null;
+    renderPayModal();
+    renderResults();
+  }
+}
+
+function slipVerdict(r, pay) {
+  const base = { at: Date.now(), amount: r.total || 0, to: r.merchant || '', account: r.toAccount || '', ref: r.reference || '' };
+  if (!r.ok) return { ...base, ok: false, reason: 'AI อ่านยอดในสลิปไม่ได้ ตรวจเองอีกครั้ง' };
+  if (r.kind !== 'transfer_slip') return { ...base, ok: false, reason: 'รูปนี้ไม่น่าใช่สลิปโอนเงิน' };
+  if (Math.abs(r.total - pay.amount) > 1) return { ...base, ok: false, reason: `ยอดในสลิป ฿${fmt(r.total)} ไม่ตรงกับยอดที่ต้องโอน ฿${fmt(pay.amount)}` };
+  // สลิปมักโชว์เลขท้ายของบัญชี/พร้อมเพย์ผู้รับ — ไม่ตรงกับที่ผู้รับลงไว้ = อาจโอนผิดคน
+  const pp = state.promptpay && state.promptpay[pay.to];
+  const tail = base.account.replace(/\D/g, '').slice(-4);
+  if (pp && tail.length >= 3 && !pp.endsWith(tail)) return { ...base, ok: false, reason: `เลขบัญชีผู้รับในสลิป (${base.account}) ไม่ตรงกับพร้อมเพย์ของ ${pay.to}` };
+  // สลิปใบเดียวเอามายืนยันหลายรายการไม่ได้
+  if (base.ref && Object.entries(state.slipChecks || {}).some(([k, v]) => k !== pay.key && v && v.ref === base.ref)) {
+    return { ...base, ok: false, reason: 'สลิปนี้เคยใช้ยืนยันรายการโอนอื่นแล้ว (เลขอ้างอิงซ้ำ)' };
+  }
+  return { ...base, ok: true };
+}
+
+function slipCheckHtml(key) {
+  if (slipCheckingKey === key) return '<div class="slip-check busy"><span class="spin"></span> AI กำลังตรวจสลิป…</div>';
+  const c = state.slipChecks && state.slipChecks[key];
+  if (!c) return '';
+  if (c.ok) {
+    return `<div class="slip-check ok">✅ AI ตรวจแล้ว: ยอด ฿${fmt(c.amount)} ตรง${c.to ? ` · ผู้รับ ${escHtml(c.to)}` : ''}${c.ref ? `<br><span style="font-size:12px;color:var(--muted)">Ref ${escHtml(c.ref)}</span>` : ''}</div>`;
+  }
+  return `<div class="slip-check bad">⚠️ ${escHtml(c.reason)}<br><span style="font-size:12px">ถ้าตรวจแล้วถูกต้อง กด "ทำเครื่องหมายว่าโอนแล้ว" เองได้</span></div>`;
 }
 
 function deleteSlip() {
@@ -1673,13 +1948,16 @@ function deleteSlip() {
   const key = currentPay.key;
   const prev = state.slips && state.slips[key];
   if (!prev) return;
+  const prevCheck = state.slipChecks && state.slipChecks[key];
   delete state.slips[key];
+  if (prevCheck) delete state.slipChecks[key];
   saveState();
   renderPayModal();
   renderResults();
   toast('ลบสลิปแล้ว', { action: 'เลิกทำ', onAction: () => {
     if (!state.slips) state.slips = {};
     state.slips[key] = prev;
+    if (prevCheck) state.slipChecks[key] = prevCheck;
     saveState(); renderResults();
     if (currentPay && currentPay.key === key) renderPayModal();
   } });
@@ -1696,11 +1974,31 @@ async function newSession() {
   });
   if (!ok) return;
   if (isSharedSession) leaveSession();
-  state = { members: [], expenses: [], qrcodes: {}, settled: {}, slips: {}, tripName: '' };
+  state = { members: [], expenses: [], qrcodes: {}, promptpay: {}, settled: {}, slips: {}, slipChecks: {}, tripName: '' };
   persistLocal(); renderAll(); toast('ล้างข้อมูลแล้ว');
 }
+// ส่งสรุปเข้า LINE: เปิดหน้าเลือกแชทของ LINE พร้อมข้อความ (ไม่ต้องมี bot / backend)
+function shareToLine() {
+  const text = buildSummaryText();
+  if (!text) { toast('ยังไม่มีข้อมูล'); return; }
+  const full = isSharedSession ? `${text}\n🔗 เปิดดู/โอนในแอป: ${getShareUrl()}` : text;
+  window.open('https://line.me/R/share?text=' + encodeURIComponent(full), '_blank', 'noopener');
+}
+function shareRowHtml() {
+  return `<div class="share-row">
+    <button class="btn btn-line" onclick="shareToLine()">💬 ส่งสรุปเข้า LINE</button>
+    <button class="btn btn-ghost" onclick="exportSession()">📋 คัดลอก</button>
+  </div>`;
+}
+
 function exportSession() {
-  if (!state.expenses.length) { toast('ยังไม่มีข้อมูล'); return; }
+  const text = buildSummaryText();
+  if (!text) { toast('ยังไม่มีข้อมูล'); return; }
+  navigator.clipboard.writeText(text).then(() => toast('คัดลอกแล้ว ✓')).catch(() => toast('คัดลอกไม่ได้'));
+}
+
+function buildSummaryText() {
+  if (!state.expenses.length) return null;
   const { net } = calcAll();
   const transfers = minTransfers(net);
   const total = state.expenses.reduce((s, e) => s + e.amount, 0);
@@ -1715,7 +2013,7 @@ function exportSession() {
   text += '\n💸 รายการโอน\n';
   if (!transfers.length) text += '  ไม่ต้องโอน\n';
   else transfers.forEach(t => { text += `  ${state.settled[settleKey(t)] ? '✅' : '⬜'} ${t.from} → ${t.to}: ฿${fmt(t.amount)}\n`; });
-  navigator.clipboard.writeText(text).then(() => toast('คัดลอกแล้ว ✓')).catch(() => toast('คัดลอกไม่ได้'));
+  return text;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1727,7 +2025,122 @@ function escAttr(s) { return String(s).replace(/'/g,'&#39;').replace(/"/g,'&quot
 // ใช้แทน '${escAttr(x)}' ใน onclick — HTML parser แปลง &#39; กลับเป็น ' ก่อนรัน JS ทำให้ชื่อสมาชิกที่มี ' หลุดออกจาก string ได้ (XSS)
 // JSON.stringify ให้ string literal ที่ถูกต้องเสมอ แล้ว escHtml กัน " ไม่ให้ปิด attribute
 function jsArg(s) { return escHtml(JSON.stringify(String(s))); }
-function renderAll() { renderTripName(); renderMembers(); renderExpenses(); }
+function renderAll() { renderTripName(); renderMembers(); renderExpenses(); renderProfileCard(); recordTrip(); renderTrips(); }
+
+// ─── โปรไฟล์ / เพื่อน / ทริปล่าสุด — เก็บใน localStorage ของเครื่องนี้เท่านั้น ไม่ส่งขึ้นที่ไหน ───
+const PROFILE_KEY = 'ppu_profile', FRIENDS_KEY = 'ppu_friends', TRIPS_KEY = 'ppu_trips';
+function readJson(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch (e) { return fallback; } }
+function writeJson(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* โหมดส่วนตัว/พื้นที่เต็ม */ } }
+function getProfile() { return readJson(PROFILE_KEY, {}); }
+
+function renderProfileCard() {
+  const p = getProfile();
+  const canAddMe = p.name && !state.members.includes(p.name);
+  document.getElementById('profile-card').innerHTML = `
+    <div class="card-title">👤 โปรไฟล์ของฉัน</div>
+    <div class="profile-grid">
+      <div><label for="pf-name">ชื่อเล่น</label><input type="text" id="pf-name" maxlength="20" autocomplete="off" placeholder="เช่น นัท" value="${escHtml(p.name || '')}"></div>
+      <div><label for="pf-pp">พร้อมเพย์ของฉัน</label><input type="text" id="pf-pp" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="08x-xxx-xxxx" value="${escHtml(p.promptpay || '')}"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="saveProfileForm()">💾 บันทึกโปรไฟล์</button>
+      ${canAddMe ? `<button class="btn btn-primary btn-sm" style="flex:1" onclick="addMember(${jsArg(p.name)})">＋ เพิ่มฉันในทริปนี้</button>` : ''}
+    </div>
+    <div class="pp-hint">เก็บในเครื่องนี้เท่านั้น เข้าทริปใหม่แล้วเลือกชื่อตัวเอง ระบบจะใส่พร้อมเพย์ให้อัตโนมัติ</div>`;
+}
+
+function saveProfileForm() {
+  const name = document.getElementById('pf-name').value.trim().slice(0, 20);
+  const ppInput = document.getElementById('pf-pp');
+  const raw = ppInput.value.trim();
+  const id = raw ? PromptPay.parseId(raw) : null;
+  if (raw && !id) { ppInput.classList.add('invalid'); ppInput.focus(); toast('เลขพร้อมเพย์ไม่ถูกต้อง'); return; }
+  writeJson(PROFILE_KEY, { name, promptpay: id ? id.digits : '' });
+  const me = getIdentity();
+  if (me && me === name) applyProfileTo(me);
+  renderProfileCard();
+  toast('บันทึกโปรไฟล์แล้ว ✓');
+}
+
+// ตั้งพร้อมเพย์ของตัวเองในทริป → จำไว้ในโปรไฟล์ด้วย (เฉพาะชื่อที่เป็นตัวเอง)
+function saveProfilePromptPay(name, digits) {
+  const p = getProfile();
+  if (name !== getIdentity() && name !== p.name) return;
+  writeJson(PROFILE_KEY, { ...p, name: p.name || name, promptpay: digits });
+}
+
+// เลือกตัวตนในทริป → ใส่พร้อมเพย์จากโปรไฟล์ให้ (ถ้ายังไม่มี) และจำชื่อไว้ครั้งแรก
+function applyProfileTo(name) {
+  const p = getProfile();
+  if (!p.name) writeJson(PROFILE_KEY, { ...p, name });
+  if (p.promptpay && (!state.promptpay || !state.promptpay[name]) && canEditPayInfo(name)) {
+    if (!state.promptpay) state.promptpay = {};
+    state.promptpay[name] = p.promptpay;
+    saveState();
+    renderMembers();
+    toast('ใส่พร้อมเพย์จากโปรไฟล์ให้แล้ว ✓');
+  }
+}
+
+// เพื่อนที่เคยหารด้วย: แตะเพื่อเพิ่มเข้าทริป ไม่ต้องพิมพ์ใหม่
+function rememberFriends(names) {
+  const me = getProfile().name;
+  const fresh = names.filter(n => n && n !== me);
+  if (!fresh.length) return;
+  const list = readJson(FRIENDS_KEY, []);
+  writeJson(FRIENDS_KEY, [...fresh, ...list.filter(n => !fresh.includes(n))].slice(0, 30));
+}
+function renderFriendSuggest() {
+  const el = document.getElementById('friend-suggest');
+  const friends = readJson(FRIENDS_KEY, []).filter(n => !state.members.includes(n)).slice(0, 10);
+  el.innerHTML = friends.length
+    ? `<span class="pp-hint" style="width:100%;margin:0">เพื่อนที่เคยหารด้วย:</span>` + friends.map(n => `<button type="button" class="mini-chip" onclick="addMember(${jsArg(n)})">＋ ${escHtml(n)}</button>`).join('')
+    : '';
+}
+
+// ทริปล่าสุด: จำ session ที่เคยเข้า + ยอดของตัวเอง ไว้ดูได้แม้ทริปจะถูกลบอัตโนมัติไปแล้ว
+function recordTrip() {
+  if (!isSharedSession || !sessionId) return;
+  const me = getIdentity();
+  const { net } = calcAll();
+  const entry = {
+    id: sessionId,
+    name: state.tripName || 'ทริปไม่มีชื่อ',
+    at: Date.now(),
+    total: state.expenses.reduce((t, e) => t + e.amount, 0),
+    count: state.members.length,
+    me: me && state.members.includes(me) ? me : '',
+    myNet: me && net[me] != null ? Math.round(net[me]) : null,
+  };
+  const trips = readJson(TRIPS_KEY, []).filter(t => t.id !== sessionId);
+  writeJson(TRIPS_KEY, [entry, ...trips].slice(0, 20));
+}
+
+function renderTrips() {
+  const card = document.getElementById('trips-card');
+  const trips = readJson(TRIPS_KEY, []);
+  card.hidden = !trips.length;
+  if (!trips.length) return;
+  card.innerHTML = `<div class="card-title">🧳 ทริปล่าสุด</div>` + trips.map(t => {
+    const current = isSharedSession && t.id === sessionId;
+    const stale = Date.now() - t.at > SESSION_TTL_MS;
+    const mine = t.myNet == null ? '' : t.myNet < -0.5 ? `${escHtml(t.me)} ต้องจ่าย ฿${fmt(-t.myNet)}` : t.myNet > 0.5 ? `${escHtml(t.me)} รับคืน ฿${fmt(t.myNet)}` : `${escHtml(t.me)} เคลียร์แล้ว`;
+    const sub = [new Date(t.at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }), `${t.count} คน`, `฿${fmt(t.total)}`, mine].filter(Boolean).join(' · ');
+    return `<div class="trip-row">
+      <div class="trip-main" ${current ? '' : `onclick="openTrip(${jsArg(t.id)})"`}>
+        <div class="trip-name">${escHtml(t.name)}${current ? ' <span class="badge badge-neutral">กำลังเปิด</span>' : ''}${stale && !current ? ' <span class="badge badge-red">อาจถูกลบแล้ว</span>' : ''}</div>
+        <div class="trip-sub">${sub}</div>
+      </div>
+      ${current ? '' : `<button class="chip-del" onclick="forgetTrip(${jsArg(t.id)})" aria-label="ลบออกจากประวัติ">×</button>`}
+    </div>`;
+  }).join('');
+}
+
+function openTrip(id) { location.href = location.pathname + '?s=' + encodeURIComponent(id); }
+function forgetTrip(id) {
+  writeJson(TRIPS_KEY, readJson(TRIPS_KEY, []).filter(t => t.id !== id));
+  renderTrips();
+}
 
 function renderTripName() {
   const input = document.getElementById('trip-name');
