@@ -1,0 +1,14 @@
+{
+  "name": "payperused-scan",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker ที่ถือ Gemini API key และคุมโควตาให้ปุ่มสแกนบิลของ PayPerUsed",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "devDependencies": {
+    "wrangler": "^4.150.0"
+  }
+}

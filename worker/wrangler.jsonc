@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "payperused-scan",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  "vars": {
+    // หน้าเว็บที่อนุญาตให้เรียก (คั่นด้วย ,)
+    "ALLOWED_ORIGINS": "https://nakarinsg.github.io",
+    "GEMINI_MODEL": "gemini-3.5-flash-lite",
+    // ตั้งให้ต่ำกว่าโควตาจริงใน Google AI Studio (Rate limits) เล็กน้อย
+    "LIMIT_PER_MINUTE": "8",
+    "LIMIT_PER_DAY": "200",
+    "LIMIT_PER_IP_PER_DAY": "40"
+  },
+  // GEMINI_API_KEY ไม่อยู่ในไฟล์นี้ — ตั้งด้วย: npx wrangler secret put GEMINI_API_KEY
+  "durable_objects": {
+    "bindings": [{ "name": "USAGE", "class_name": "UsageCounter" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["UsageCounter"] }],
+  "observability": { "enabled": true }
+}

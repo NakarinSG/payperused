@@ -172,6 +172,20 @@
   .split-preview.empty-hint { background: var(--surface2); border-color: var(--border); color: var(--muted); font-size: 13px; }
   .split-preview b { color: var(--accent2); }
   .split-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+
+  [hidden] { display: none !important; }
+  .scan-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .scan-row .btn { flex-shrink: 0; }
+  .scan-usage { font-size: 12px; color: var(--muted); }
+  .scan-usage.low { color: var(--text); font-weight: 600; }
+  .scan-usage.out { color: var(--red); font-weight: 600; }
+  .scan-info {
+    margin: 4px 0 6px; padding: 9px 12px; border-radius: 10px; font-size: 13px; line-height: 1.6;
+    background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.28);
+  }
+  .scan-info.warn { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.45); }
+  .spin { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   .check-item span { font-size: 14px; }
 
   .weight-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
@@ -603,6 +617,12 @@
   <div class="form-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-handle"></div>
     <div class="modal-title" id="modal-title">เพิ่มรายการค่าใช้จ่าย</div>
+    <div class="scan-row" id="exp-scan-row" hidden>
+      <button type="button" class="btn btn-ghost btn-sm" id="exp-scan-btn" onclick="startBillScan()">📷 สแกนบิล / สลิป</button>
+      <span class="scan-usage" id="exp-scan-usage" aria-live="polite"></span>
+    </div>
+    <div class="scan-info" id="exp-scan-info" hidden></div>
+    <input type="file" id="bill-file-input" accept="image/*" hidden onchange="handleBillScan(event)">
     <label for="exp-name">ชื่อรายการ</label>
     <input type="text" id="exp-name" placeholder="เช่น อาหารเย็น, น้ำมัน" autocomplete="off" enterkeyhint="next" maxlength="60">
     <label for="exp-amount">ราคารวม (บาท)</label>
@@ -703,6 +723,10 @@ let state = { members: [], expenses: [], qrcodes: {}, settled: {}, slips: {}, tr
 let editingExpenseId = null;
 
 const SESSION_TTL_MS = 15 * 24 * 60 * 60 * 1000; // 15 วัน
+
+// URL ของ Cloudflare Worker ที่ถือ Gemini API key และคุมโควตา (ดู worker/README.md) — ว่างไว้ = ซ่อนปุ่มสแกนบิล
+// ห้ามใส่ API key ในไฟล์นี้: repo เป็น public และ GitHub Pages เสิร์ฟทุกไฟล์
+const SCAN_API_URL = '';
 
 // ─── Session ──────────────────────────────────────────────────────────────────
 let sessionId = null, isSharedSession = false;
@@ -921,7 +945,7 @@ function deleteQR(name) {
   } });
 }
 
-async function compressImage(file) {
+async function compressImage(file, MAX = 700) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = reject;
@@ -929,7 +953,6 @@ async function compressImage(file) {
       const img = new Image();
       img.onerror = reject;
       img.onload = () => {
-        const MAX = 700;
         let w = img.width, h = img.height;
         if (w > MAX || h > MAX) {
           if (w > h) { h = Math.round(h / w * MAX); w = MAX; }
@@ -1124,11 +1147,114 @@ function openExpenseModal(id = null) {
     participantEls().forEach(el => setParticipant(el, true));
   }
   onParticipantsChanged();
+  initScanUi();
   document.getElementById('expense-modal').classList.add('open');
   // เดสก์ท็อปโฟกัสช่องชื่อให้เลย (มือถือไม่ทำ เพราะคีย์บอร์ดเด้งทับ sheet ตอนกำลังเลื่อนขึ้น)
   if (!id && matchMedia('(pointer: fine)').matches) document.getElementById('exp-name').focus();
 }
 function closeExpenseModal() { document.getElementById('expense-modal').classList.remove('open'); editingExpenseId = null; }
+
+// ─── สแกนบิล / สลิป (Gemini ผ่าน Cloudflare Worker) ───────────────────────────
+// โควตาจริงนับที่ Worker (ต่อนาที / ต่อวัน / ต่อ IP) หน้าเว็บแค่แสดงผลและปิดปุ่มเมื่อต้องรอ
+let scanBusy = false, scanUsage = null, scanBlockedUntil = 0, scanUnblockTimer = null;
+const SCAN_KIND = { receipt: 'ใบเสร็จ', transfer_slip: 'สลิปโอน', bill: 'บิล', other: 'เอกสาร' };
+const SCAN_FAIL = {
+  not_document: 'รูปนี้ไม่น่าใช่บิลหรือสลิป ลองถ่ายใหม่ให้เห็นยอดชัดๆ',
+  no_total: 'อ่านยอดเงินไม่ออก ลองถ่ายให้ชัดขึ้น หรือกรอกเอง',
+};
+
+function initScanUi() {
+  document.getElementById('exp-scan-row').hidden = !SCAN_API_URL;
+  document.getElementById('exp-scan-info').hidden = true;
+  if (!SCAN_API_URL) return;
+  renderScanUi();
+  fetch(SCAN_API_URL + '/usage').then(r => (r.ok ? r.json() : null)).then(d => { if (d) applyScanUsage(d.usage); }).catch(() => {});
+}
+
+function applyScanUsage(usage) {
+  if (!usage || !usage.day) return;
+  scanUsage = usage;
+  let wait = usage.cooldown || 0;
+  if (usage.day.used >= usage.day.limit) wait = Math.max(wait, usage.day.resetIn);
+  if (wait) blockScan(wait); else renderScanUi();
+}
+
+function blockScan(seconds) {
+  scanBlockedUntil = Math.max(scanBlockedUntil, Date.now() + seconds * 1000);
+  clearTimeout(scanUnblockTimer);
+  scanUnblockTimer = setTimeout(renderScanUi, scanBlockedUntil - Date.now() + 250);
+  renderScanUi();
+}
+
+function renderScanUi() {
+  const btn = document.getElementById('exp-scan-btn');
+  const usageEl = document.getElementById('exp-scan-usage');
+  const wait = Math.ceil((scanBlockedUntil - Date.now()) / 1000);
+  btn.disabled = scanBusy || wait > 0;
+  btn.innerHTML = scanBusy ? '<span class="spin"></span> AI กำลังอ่าน…' : '📷 สแกนบิล / สลิป';
+  if (wait > 120) {
+    usageEl.className = 'scan-usage out';
+    usageEl.textContent = `โควตาวันนี้หมดแล้ว · ใช้ได้อีกครั้ง ${new Date(scanBlockedUntil).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`;
+  } else if (wait > 0) {
+    usageEl.className = 'scan-usage low';
+    usageEl.textContent = `ใช้ถี่เกินไป รอประมาณ ${wait} วินาที`;
+  } else if (scanUsage) {
+    const { used, limit } = scanUsage.day;
+    usageEl.className = 'scan-usage' + (limit - used <= limit * 0.2 ? ' low' : '');
+    usageEl.textContent = `AI วันนี้ ${used}/${limit} ครั้ง`;
+  } else {
+    usageEl.textContent = '';
+  }
+}
+
+function startBillScan() { if (!scanBusy) document.getElementById('bill-file-input').click(); }
+
+async function handleBillScan(event) {
+  const file = event.target.files && event.target.files[0];
+  event.target.value = '';
+  if (!file || scanBusy) return;
+  scanBusy = true; renderScanUi();
+  try {
+    const dataUrl = await compressImage(file, 1600);
+    const res = await fetch(SCAN_API_URL + '/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: dataUrl.split(',')[1], mimeType: 'image/jpeg' }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data.usage) applyScanUsage(data.usage);
+    if (res.status === 429) {
+      blockScan(data.retryAfter || 60);
+      toast(data.reason === 'day' ? 'ใช้ AI ครบโควตาวันนี้แล้ว' : data.reason === 'ip' ? 'เครื่องนี้สแกนครบโควตาวันนี้แล้ว' : `ใช้ AI ถี่เกินไป รอ ${data.retryAfter || 60} วินาที`);
+    } else if (!res.ok) {
+      toast('สแกนไม่สำเร็จ ลองใหม่อีกครั้ง');
+    } else if (!data.ok) {
+      toast(SCAN_FAIL[data.result && data.result.reason] || 'อ่านบิลไม่สำเร็จ');
+    } else {
+      fillFromScan(data.result);
+    }
+  } catch (e) {
+    toast('สแกนไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองใหม่');
+  } finally {
+    scanBusy = false; renderScanUi();
+  }
+}
+
+// AI แค่กรอกให้ — ผู้ใช้ยังต้องตรวจและกดบันทึกเอง
+function fillFromScan(r) {
+  const name = document.getElementById('exp-name'), amount = document.getElementById('exp-amount');
+  name.value = r.title;
+  amount.value = r.total;
+  [name, amount].forEach(f => f.classList.remove('invalid'));
+  updateSplitPreview();
+  const low = r.confidence < 0.7;
+  const date = r.date ? new Date(r.date + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+  const info = document.getElementById('exp-scan-info');
+  info.className = 'scan-info' + (low ? ' warn' : '');
+  info.innerHTML = `🤖 อ่านจาก${SCAN_KIND[r.kind] || 'เอกสาร'}: <b>${escHtml(r.merchant || r.title)}</b> · ฿${r.total.toLocaleString('th-TH', { maximumFractionDigits: 2 })}${date ? ' · ' + date : ''}<br>`
+    + (low ? '⚠️ AI ไม่ค่อยมั่นใจ ตรวจยอดอีกครั้งก่อนบันทึก' : 'ตรวจชื่อกับยอด แล้วเลือกคนหารได้เลย');
+  info.hidden = false;
+}
 document.getElementById('expense-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeExpenseModal(); });
 document.getElementById('identity-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeIdentityModal(); });
 document.getElementById('qr-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeQRModal(); });
